@@ -1,3 +1,12 @@
+const SUPABASE_URL = 'https://rgxybkmglfdxrgluzfwc.supabase.co';
+
+const SUPABASE_KEY = 'TU_PUBLISHABLE_KEY';
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
 const form = document.getElementById('bookingForm');
 const toast = document.getElementById('toast');
 const creatorEmail = 'creador@nailsspa.com';
