@@ -7,20 +7,6 @@ const supabaseClient = window.supabase.createClient(
   SUPABASE_KEY
 );
 
-async function probarSupabase() {
-  const { data, error } = await supabaseClient
-    .from('appointments')
-    .select('*');
-
-  if (error) {
-    console.error('Error conectando con Supabase:', error);
-    return;
-  }
-
-  console.log('Supabase conectado correctamente:', data);
-}
-
-probarSupabase();
 
 const form = document.getElementById('bookingForm');
 const toast = document.getElementById('toast');
@@ -130,12 +116,18 @@ function showToast(message) {
   }, 2600);
 }
 
-function getAppointments() {
-  try {
-    return JSON.parse(localStorage.getItem('nailsSpaAppointments') || '[]');
-  } catch (error) {
+async function getAppointments() {
+  const { data, error } = await supabaseClient
+    .from('appointments')
+    .select('*')
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error('Error obteniendo citas:', error);
     return [];
   }
+
+  return data || [];
 }
 
 function saveAppointments(appointments) {
@@ -154,17 +146,21 @@ function saveRegisteredAppointments(appointments) {
   localStorage.setItem('nailsSpaRegisteredAppointments', JSON.stringify(appointments));
 }
 
-function getAvailability() {
-  try {
-    return JSON.parse(localStorage.getItem('nailsSpaAvailability') || '[]');
-  } catch (error) {
+async function getAvailability() {
+  const { data, error } = await supabaseClient
+    .from('availability')
+    .select('*')
+    .order('date', { ascending: true })
+    .order('time', { ascending: true });
+
+  if (error) {
+    console.error('Error obteniendo disponibilidad:', error);
     return [];
   }
+
+  return data || [];
 }
 
-function saveAvailability(availability) {
-  localStorage.setItem('nailsSpaAvailability', JSON.stringify(availability));
-}
 
 function toDateKey(date) {
   const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
@@ -212,29 +208,44 @@ function createDefaultAvailability() {
   saveAvailability(availability);
 }
 
-function getBookedSlots() {
+async function getBookedSlots() {
+  const appointments = await getAppointments();
+
   return new Set(
-    getAppointments().map((appointment) => `${appointment.date}|${appointment.time}`)
+    appointments.map(
+      (appointment) => `${appointment.date}|${appointment.time}`
+    )
   );
 }
 
-function getAvailableSlots() {
-  const booked = getBookedSlots();
-  return getAvailability()
-    .filter((slot) => !booked.has(`${slot.date}|${slot.time}`))
-    .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
+async function getAvailableSlots() {
+  const booked = await getBookedSlots();
+  const availability = await getAvailability();
+
+  return availability
+    .filter(
+      (slot) =>
+        !booked.has(`${slot.date}|${slot.time}`)
+    )
+    .sort((a, b) =>
+      `${a.date} ${a.time}`.localeCompare(
+        `${b.date} ${b.time}`
+      )
+    );
 }
 
-function renderAppointments() {
-  const appointments = getAppointments();
+async function renderAppointments() {
+  const appointments = await getAppointments();
 
   if (appointmentsCount) {
-    appointmentsCount.textContent = `${appointments.length} cita${appointments.length === 1 ? '' : 's'}`;
+    appointmentsCount.textContent =
+      `${appointments.length} cita${appointments.length === 1 ? '' : 's'}`;
   }
 
   if (!appointments.length) {
     if (appointmentsList) {
-      appointmentsList.innerHTML = '<p class="empty-state">No hay citas agendadas todavía.</p>';
+      appointmentsList.innerHTML =
+        '<p class="empty-state">No hay citas agendadas todavía.</p>';
     }
     return;
   }
@@ -246,17 +257,51 @@ function renderAppointments() {
           <article class="appointment-card">
             <div>
               <h3>${escapeHtml(appointment.name)}</h3>
+
               <div class="appointment-details">
-                <span><strong>Tel:</strong> ${escapeHtml(appointment.phone)}</span>
-                <span><strong>Servicio:</strong> ${escapeHtml(appointment.service)}</span>
-                <span><strong>Fecha:</strong> ${escapeHtml(formatDate(appointment.date))}</span>
-                <span><strong>Hora:</strong> ${escapeHtml(formatTimeLabel(appointment.time))}</span>
-                <span><strong>Notas:</strong> ${escapeHtml(appointment.notes || 'Sin detalles')}</span>
+                <span>
+                  <strong>Tel:</strong>
+                  ${escapeHtml(appointment.phone)}
+                </span>
+
+                <span>
+                  <strong>Servicio:</strong>
+                  ${escapeHtml(appointment.service)}
+                </span>
+
+                <span>
+                  <strong>Fecha:</strong>
+                  ${escapeHtml(formatDate(appointment.date))}
+                </span>
+
+                <span>
+                  <strong>Hora:</strong>
+                  ${escapeHtml(formatTimeLabel(appointment.time))}
+                </span>
+
+                <span>
+                  <strong>Notas:</strong>
+                  ${escapeHtml(appointment.notes || 'Sin detalles')}
+                </span>
               </div>
             </div>
+
             <div class="appointment-actions">
-              <button type="button" class="cancel-btn" data-id="${appointment.id}">Cancelar</button>
-              <button type="button" class="attended-btn" data-id="${appointment.id}">Agenda atendida</button>
+              <button
+                type="button"
+                class="cancel-btn"
+                data-id="${appointment.id}"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                class="attended-btn"
+                data-id="${appointment.id}"
+              >
+                Agenda atendida
+              </button>
             </div>
           </article>
         `
@@ -265,17 +310,20 @@ function renderAppointments() {
   }
 }
 
-function renderRegisteredAppointments() {
-  const registeredAppointments = getRegisteredAppointments();
+
+async function renderRegisteredAppointments() {
+  const registeredAppointments = await getRegisteredAppointments();
 
   if (registeredAppointmentsCount) {
-    registeredAppointmentsCount.textContent = `${registeredAppointments.length} agenda${registeredAppointments.length === 1 ? '' : 's'}`;
+    registeredAppointmentsCount.textContent =
+      `${registeredAppointments.length} agenda${registeredAppointments.length === 1 ? '' : 's'}`;
   }
 
   if (!registeredAppointmentsList) return;
 
   if (!registeredAppointments.length) {
-    registeredAppointmentsList.innerHTML = '<p class="empty-state">Aún no hay agendas atendidas.</p>';
+    registeredAppointmentsList.innerHTML =
+      '<p class="empty-state">Aún no hay agendas atendidas.</p>';
     return;
   }
 
@@ -285,12 +333,32 @@ function renderRegisteredAppointments() {
         <article class="appointment-card">
           <div>
             <h3>${escapeHtml(appointment.name)}</h3>
+
             <div class="appointment-details">
-              <span><strong>Tel:</strong> ${escapeHtml(appointment.phone)}</span>
-              <span><strong>Servicio:</strong> ${escapeHtml(appointment.service)}</span>
-              <span><strong>Fecha:</strong> ${escapeHtml(formatDate(appointment.date))}</span>
-              <span><strong>Hora:</strong> ${escapeHtml(formatTimeLabel(appointment.time))}</span>
-              <span><strong>Notas:</strong> ${escapeHtml(appointment.notes || 'Sin detalles')}</span>
+              <span>
+                <strong>Tel:</strong>
+                ${escapeHtml(appointment.phone)}
+              </span>
+
+              <span>
+                <strong>Servicio:</strong>
+                ${escapeHtml(appointment.service)}
+              </span>
+
+              <span>
+                <strong>Fecha:</strong>
+                ${escapeHtml(formatDate(appointment.date))}
+              </span>
+
+              <span>
+                <strong>Hora:</strong>
+                ${escapeHtml(formatTimeLabel(appointment.time))}
+              </span>
+
+              <span>
+                <strong>Notas:</strong>
+                ${escapeHtml(appointment.notes || 'Sin detalles')}
+              </span>
             </div>
           </div>
         </article>
@@ -299,11 +367,15 @@ function renderRegisteredAppointments() {
     .join('');
 }
 
-function renderAvailabilityList() {
-  const availability = getAvailableSlots();
+
+
+
+async function renderAvailabilityList() {
+  const availability = await getAvailableSlots();
 
   if (!availability.length) {
-    availabilityList.innerHTML = '<p class="empty-state">No hay horarios disponibles por el momento.</p>';
+    availabilityList.innerHTML =
+      '<p class="empty-state">No hay horarios disponibles por el momento.</p>';
     return;
   }
 
@@ -311,15 +383,26 @@ function renderAvailabilityList() {
     .map(
       (slot) => `
         <div class="availability-pill">
-          <span>${escapeHtml(formatDate(slot.date))} · ${escapeHtml(formatTimeLabel(slot.time))}</span>
-          <button type="button" class="remove-slot-btn" data-slot-id="${slot.id}" aria-label="Eliminar horario">×</button>
+          <span>
+            ${escapeHtml(formatDate(slot.date))} ·
+            ${escapeHtml(formatTimeLabel(slot.time))}
+          </span>
+
+          <button
+            type="button"
+            class="remove-slot-btn"
+            data-slot-id="${slot.id}"
+            aria-label="Eliminar horario"
+          >
+            ×
+          </button>
         </div>
       `
     )
     .join('');
 }
 
-function renderCalendar() {
+async function renderCalendar() {
   const monthStart = new Date(state.currentMonth.getFullYear(), state.currentMonth.getMonth(), 1);
   const monthLabel = monthStart.toLocaleString('es-MX', { month: 'long', year: 'numeric' });
   calendarMonthLabel.textContent = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
@@ -334,7 +417,11 @@ function renderCalendar() {
     days.push(date);
   }
 
-  const availableDates = new Set(getAvailableSlots().map((slot) => slot.date));
+  const availableSlots = await getAvailableSlots();
+
+const availableDates = new Set(
+  availableSlots.map((slot) => slot.date)
+);
 
   const calendarMarkup = days
     .map((date) => {
@@ -364,8 +451,12 @@ function renderCalendar() {
   calendarDays.innerHTML = calendarMarkup;
 }
 
-function renderSlotOptions(dateKey) {
-  const slots = getAvailableSlots().filter((slot) => slot.date === dateKey);
+async function renderSlotOptions(dateKey) {
+  const availableSlots = await getAvailableSlots();
+
+const slots = availableSlots.filter(
+  (slot) => slot.date === dateKey
+);
   slotOptions.innerHTML = '';
 
   if (!slots.length) {
@@ -430,31 +521,69 @@ function sendEmail(subject, body) {
   window.location.href = mailtoUrl;
 }
 
-function addAppointment(appointment) {
-  const appointments = getAppointments();
-  appointments.push(appointment);
-  saveAppointments(appointments);
-  renderAppointments();
-  renderAvailabilityList();
+async function addAppointment(appointment) {
+  const { data, error } = await supabaseClient
+    .from('appointments')
+    .insert({
+      name: appointment.name,
+      phone: appointment.phone,
+      service: appointment.service,
+      date: appointment.date,
+      time: appointment.time,
+      notes: appointment.notes || ''
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error guardando cita:', error);
+    showToast('No se pudo guardar la cita.');
+    return false;
+  }
+
+  console.log('Cita guardada en Supabase:', data);
+
+  await renderAppointments();
   renderCalendar();
+
   if (state.selectedDate) {
     renderSlotOptions(state.selectedDate);
   }
+
+  return true;
 }
 
-function cancelAppointment(appointmentId) {
-  const appointments = getAppointments();
-  const appointment = appointments.find((item) => String(item.id) === String(appointmentId));
+async function cancelAppointment(appointmentId) {
+  const { data: appointment, error: findError } =
+    await supabaseClient
+      .from('appointments')
+      .select('*')
+      .eq('id', appointmentId)
+      .single();
 
-  if (!appointment) return;
+  if (findError || !appointment) {
+    console.error('Error buscando cita:', findError);
+    showToast('No se encontró la cita.');
+    return;
+  }
 
-  const remaining = appointments.filter((item) => String(item.id) !== String(appointmentId));
-  saveAppointments(remaining);
-  renderAppointments();
-  renderAvailabilityList();
-  renderCalendar();
+  const { error } = await supabaseClient
+    .from('appointments')
+    .delete()
+    .eq('id', appointmentId);
+
+  if (error) {
+    console.error('Error cancelando cita:', error);
+    showToast('No se pudo cancelar la cita.');
+    return;
+  }
+
+  await renderAppointments();
+  await renderAvailabilityList();
+  await renderCalendar();
+
   if (state.selectedDate) {
-    renderSlotOptions(state.selectedDate);
+    await renderSlotOptions(state.selectedDate);
   }
 
   sendEmail(
@@ -465,29 +594,62 @@ function cancelAppointment(appointmentId) {
   showToast(`La cita de ${appointment.name} fue cancelada.`);
 }
 
-function markAppointmentAsHandled(appointmentId) {
-  const appointments = getAppointments();
-  const appointment = appointments.find((item) => String(item.id) === String(appointmentId));
 
-  if (!appointment) return;
+async function markAppointmentAsHandled(appointmentId) {
+  const { data: appointment, error: getError } = await supabase
+    .from('appointments')
+    .select('*')
+    .eq('id', appointmentId)
+    .single();
 
-  const remaining = appointments.filter((item) => String(item.id) !== String(appointmentId));
-  saveAppointments(remaining);
+  if (getError || !appointment) {
+    console.error('Error buscando la cita:', getError);
+    showToast('No se pudo encontrar la cita.');
+    return;
+  }
 
-  const registered = getRegisteredAppointments();
-  registered.push({ ...appointment, handledAt: new Date().toISOString() });
-  saveRegisteredAppointments(registered);
+  const { error: insertError } = await supabase
+    .from('registered_appointments')
+    .insert({
+      name: appointment.name,
+      phone: appointment.phone,
+      service: appointment.service,
+      date: appointment.date,
+      time: appointment.time,
+      notes: appointment.notes,
+      created_at: appointment.created_at
+    });
+
+  if (insertError) {
+    console.error('Error registrando la agenda:', insertError);
+    showToast('No se pudo registrar la agenda.');
+    return;
+  }
+
+  const { error: deleteError } = await supabase
+    .from('appointments')
+    .delete()
+    .eq('id', appointmentId);
+
+  if (deleteError) {
+    console.error('Error eliminando la cita:', deleteError);
+    showToast('La agenda se registró, pero no se pudo quitar de citas.');
+    return;
+  }
 
   renderAppointments();
   renderRegisteredAppointments();
   renderAvailabilityList();
   renderCalendar();
+
   if (state.selectedDate) {
     renderSlotOptions(state.selectedDate);
   }
 
   showToast(`La agenda de ${appointment.name} se registró como atendida.`);
 }
+
+
 
 function exportAppointments() {
   const appointments = getAppointments();
@@ -515,28 +677,47 @@ function exportAppointments() {
   sendEmail('Resumen de citas agendadas', 'Estas son las citas activas:\n\n' + text);
 }
 
-function addAvailability(date, time) {
-  const availability = getAvailability();
-  const existing = availability.some((slot) => slot.date === date && slot.time === time);
+async function addAvailability(date, time) {
+  const { data: existing, error: checkError } = await supabaseClient
+    .from('availability')
+    .select('id')
+    .eq('date', date)
+    .eq('time', time)
+    .maybeSingle();
+
+  if (checkError) {
+    console.error('Error comprobando horario:', checkError);
+    showToast('No se pudo comprobar el horario.');
+    return;
+  }
 
   if (existing) {
     showToast('Ese horario ya está disponible.');
     return;
   }
 
-  availability.push({
-    id: `${date}-${time}`,
-    date,
-    time
-  });
+  const { error } = await supabaseClient
+    .from('availability')
+    .insert({
+      id: `${date}-${time}`,
+      date: date,
+      time: time
+    });
 
-  saveAvailability(availability);
-  renderAvailabilityList();
-  renderCalendar();
+  if (error) {
+    console.error('Error agregando disponibilidad:', error);
+    showToast('No se pudo agregar el horario.');
+    return;
+  }
+
+  await renderAvailabilityList();
+  await renderCalendar();
 
   if (state.selectedDate === date) {
-    renderSlotOptions(date);
+    await renderSlotOptions(date);
   }
+
+  showToast('Horario agregado correctamente.');
 }
 
 function removeAvailability(slotId) {
