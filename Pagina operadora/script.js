@@ -7,6 +7,21 @@ const supabaseClient = window.supabase.createClient(
   SUPABASE_KEY
 );
 
+async function probarSupabase() {
+  const { data, error } = await supabaseClient
+    .from('appointments')
+    .select('*');
+
+  if (error) {
+    console.error('Error conectando con Supabase:', error);
+    return;
+  }
+
+  console.log('Supabase conectado correctamente:', data);
+}
+
+probarSupabase();
+
 const form = document.getElementById('bookingForm');
 const toast = document.getElementById('toast');
 const creatorEmail = 'creador@nailsspa.com';
