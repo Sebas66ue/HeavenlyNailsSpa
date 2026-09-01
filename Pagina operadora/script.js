@@ -87,6 +87,11 @@ function setupLogoutButton() {
 // =========================
 // CARGAR DISPONIBILIDAD
 // =========================
+function getTodayISO() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString().split("T")[0];
+}
 async function loadAvailability() {
   const today = getTodayISO();
 
