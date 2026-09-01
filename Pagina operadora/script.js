@@ -10,6 +10,30 @@ const OWNER_USERNAME = "Heaven Ulabarri";
 const OWNER_PASSWORD = "micielito";
 const ADMIN_SESSION_KEY = "nailsSpaOwnerSession";
 
+// Elementos del HTML
+const ownerLoginForm = document.getElementById("ownerLoginForm");
+const ownerSessionControls = document.getElementById("ownerSessionControls");
+const ownerLoginSection = document.getElementById("ownerLoginSection");
+
+// Secciones que solo debe ver el dueño
+const ownerOnlySections = Array.from(
+  document.querySelectorAll(".owner-only, #adminSection, #availabilitySection, #agendaSection")
+);
+
+// Toast / mensaje
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  if (!toast) return;
+
+  toast.textContent = message;
+  toast.classList.add("show");
+
+  clearTimeout(showToast.timeoutId);
+  showToast.timeoutId = setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2500);
+}
+
 function isOwnerUnlocked() {
   const savedSession = localStorage.getItem(OWNER_SESSION_KEY);
   if (!savedSession) return localStorage.getItem('nailsSpaOwner') === 'true';
