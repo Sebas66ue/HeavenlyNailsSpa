@@ -12,66 +12,78 @@ const ADMIN_SESSION_KEY = "heaven_admin_session";
 const PASSWORD_VERSION = "v1";
 
 // =========================
-// FUNCIONES GENERALES
+// LOGIN DEL ADMIN (CORREGIDO)
 // =========================
-function showToast(message, type = "success") {
-  const toast = document.getElementById("toast");
-  if (!toast) return;
-
-  toast.textContent = message;
-  toast.className = `toast ${type}`;
-  toast.classList.add("show");
-
-  clearTimeout(showToast.timeoutId);
-  showToast.timeoutId = setTimeout(() => {
-    toast.classList.remove("show");
-  }, 2500);
+function getOwnerLoginElements() {
+  return {
+    form: document.querySelector("#adminLoginForm, #ownerLoginForm, #loginForm, form[data-login]"),
+    user: document.querySelector("#adminUser, #ownerUser, #username, input[name='usuario']"),
+    pass: document.querySelector("#adminPassword, #ownerPassword, #password, input[name='password']"),
+    panel: document.querySelector("#ownerPanel, #adminPanel, .owner-panel"),
+    adminAccess: document.querySelector("#adminAccess, .admin-access"),
+    loginBox: document.querySelector("#loginBox, .login-box"),
+    logoutBtn: document.querySelector("#logoutBtn, .logout-btn, button[data-logout]")
+  };
 }
 
-function getTodayISO() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString().split("T")[0];
+function setupOwnerLogin() {
+  const { form, user, pass } = getOwnerLoginElements();
+
+  if (!form || !user || !pass) {
+    console.warn("No se encontró el formulario de login del admin.");
+    return;
+  }
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const username = user.value.trim();
+    const password = pass.value;
+
+    if (username === OWNER_USERNAME && password === OWNER_PASSWORD) {
+      setOwnerSession(true);
+      showOwnerPanel();
+      showToast("Sesión iniciada correctamente");
+      form.reset();
+      return;
+    }
+
+    showToast("Usuario o contraseña incorrectos", "error");
+  });
 }
 
-function formatDateForDisplay(dateStr) {
-  if (!dateStr) return "";
-  const d = new Date(dateStr + "T00:00:00");
-  return new Intl.DateTimeFormat("es-MX", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  }).format(d);
-}
+function showOwnerPanel() {
+  const { panel, adminAccess, loginBox } = getOwnerLoginElements();
 
-function isOwnerLoggedIn() {
-  const stored = localStorage.getItem(ADMIN_SESSION_KEY);
-  if (!stored) return false;
+  if (!panel) {
+    console.warn("No se encontró el panel del admin.");
+    return;
+  }
 
-  try {
-    const session = JSON.parse(stored);
-    return (
-      session &&
-      session.loggedIn === true &&
-      session.username === OWNER_USERNAME &&
-      session.passwordVersion === PASSWORD_VERSION
-    );
-  } catch {
-    return false;
+  if (isOwnerLoggedIn()) {
+    panel.classList.remove("hidden");
+    if (adminAccess) adminAccess.classList.remove("hidden");
+    if (loginBox) loginBox.classList.add("hidden");
+  } else {
+    panel.classList.add("hidden");
+    if (adminAccess) adminAccess.classList.add("hidden");
+    if (loginBox) loginBox.classList.remove("hidden");
   }
 }
 
-function setOwnerSession(loggedIn) {
-  localStorage.setItem(
-    ADMIN_SESSION_KEY,
-    JSON.stringify({
-      loggedIn,
-      username: OWNER_USERNAME,
-      passwordVersion: PASSWORD_VERSION,
-    })
-  );
+function logoutOwner() {
+  setOwnerSession(false);
+  showOwnerPanel();
+  showToast("Sesión cerrada");
 }
 
+function setupLogoutButton() {
+  const { logoutBtn } = getOwnerLoginElements();
+
+  if (!logoutBtn) return;
+
+  logoutBtn.addEventListener("click", logoutOwner);
+}
 // =========================
 // CARGAR DISPONIBILIDAD
 // =========================
