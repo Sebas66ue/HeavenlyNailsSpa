@@ -200,13 +200,59 @@ async function loadAvailability() {
 
   if (error) {
     console.error("Error loading availability:", error);
-    showToast("No se pudo cargar la disponibilidad.", "error");
+    showToast("No se pudo cargar la disponibilidad", "error");
     return;
   }
 
   state.availability = data || [];
+
+  if (!state.availability.length) {
+    const seedSlots = [];
+
+    for (let i = 1; i <= 7; i += 1) {
+      const date = new Date();
+      date.setDate(date.getDate() + i);
+
+      const dateKey = toDateKey(date);
+
+      ["10:00", "12:00", "15:00", "17:30"].forEach((time) => {
+        seedSlots.push({
+          date: dateKey,
+          time,
+          is_available: true
+        });
+      });
+    }
+
+    const { error: insertError } = await sb
+      .from("availability")
+      .insert(seedSlots);
+
+    if (insertError) {
+      console.error("Error seeding default availability:", insertError);
+      showToast("No se pudieron crear horarios iniciales", "error");
+      return;
+    }
+
+    const retry = await sb
+      .from("availability")
+      .select("*")
+      .gte("date", today)
+      .order("date", { ascending: true })
+      .order("time", { ascending: true });
+
+    state.availability = retry.data || [];
+  }
+
   renderAvailabilityList();
   renderCalendar();
+
+  if (!state.selectedDate && state.availability.length) {
+    state.selectedDate = state.availability[0].date;
+    state.selectedTime = state.availability[0].time;
+    if (selectedDateInput) selectedDateInput.value = state.selectedDate;
+    if (selectedTimeInput) selectedTimeInput.value = state.selectedTime;
+  }
 
   if (state.selectedDate) {
     renderSlotOptions(state.selectedDate);
@@ -771,18 +817,6 @@ async function initSupabaseApp() {
   if (isOwnerUnlocked()) {
     await loadAppointments();
     await loadRegisteredAppointments();
-  }
-
-  if (state.availability.length) {
-    const firstAvailable = state.availability[0];
-    state.selectedDate = firstAvailable.date;
-    state.selectedTime = firstAvailable.time;
-    if (selectedDateInput) selectedDateInput.value = state.selectedDate;
-    if (selectedTimeInput) selectedTimeInput.value = state.selectedTime;
-    renderSlotOptions(state.selectedDate);
-  } else if (slotOptions) {
-    slotOptions.innerHTML =
-      '<button type="button" class="slot-btn empty" disabled>Selecciona un día</button>';
   }
 }
 
