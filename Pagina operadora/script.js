@@ -14,61 +14,87 @@ const PASSWORD_VERSION = "v1";
 // =========================
 // UTILIDADES
 // =========================
-function showToast(message, type = "success") {
-  const toast = document.getElementById("toast");
-  if (!toast) return;
+function setOwnerSession(loggedIn) {
 
-  toast.textContent = message;
-  toast.className = `toast ${type}`;
-  toast.classList.add("show");
+  if (loggedIn) {
 
-  clearTimeout(showToast.timeoutId);
-  showToast.timeoutId = setTimeout(() => {
-    toast.classList.remove("show");
-  }, 2500);
-}
-
-function getTodayISO() {
-  const date = new Date();
-  date.setHours(0, 0, 0, 0);
-  return date.toISOString().split("T")[0];
-}
-
-function formatDateForDisplay(dateStr) {
-  const date = new Date(dateStr + "T00:00:00");
-  return new Intl.DateTimeFormat("es-MX", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  }).format(date);
-}
-
-function isOwnerLoggedIn() {
-  const stored = localStorage.getItem(ADMIN_SESSION_KEY);
-  if (!stored) return false;
-
-  try {
-    const session = JSON.parse(stored);
-    return (
-      session &&
-      session.loggedIn === true &&
-      session.username === OWNER_USERNAME &&
-      session.passwordVersion === PASSWORD_VERSION
+    localStorage.setItem(
+      ADMIN_SESSION_KEY,
+      JSON.stringify({
+        loggedIn: true,
+        username: OWNER_USERNAME,
+        passwordVersion: PASSWORD_VERSION
+      })
     );
-  } catch {
-    return false;
+
+  } else {
+
+    localStorage.removeItem(ADMIN_SESSION_KEY);
+
   }
 }
 
-function setOwnerSession(loggedIn) {
-  localStorage.setItem(
-    ADMIN_SESSION_KEY,
-    JSON.stringify({
-      loggedIn,
-      username: OWNER_USERNAME,
-      passwordVersion: PASSWORD_VERSION,
-    })
-  );
+
+// =========================
+// INICIO DE SESIÓN
+// =========================
+
+const ownerLoginForm =
+  document.getElementById("ownerLoginForm");
+
+if (ownerLoginForm) {
+
+  ownerLoginForm.addEventListener("submit", function(event) {
+
+    event.preventDefault();
+
+    const formData =
+      new FormData(ownerLoginForm);
+
+    const username =
+      (formData.get("username") || "")
+        .toString()
+        .trim();
+
+    const password =
+      (formData.get("password") || "")
+        .toString();
+
+    if (
+      username === OWNER_USERNAME &&
+      password === OWNER_PASSWORD
+    ) {
+
+      setOwnerSession(true);
+
+      showToast(
+        "Inicio de sesión correcto",
+        "success"
+      );
+
+      ownerLoginForm.reset();
+
+      // Ocultar formulario de login
+      ownerLoginForm.classList.add("hidden");
+
+      // Mostrar las secciones del dueño
+      document
+        .querySelectorAll(".owner-only")
+        .forEach((element) => {
+          element.classList.remove("hidden");
+        });
+
+    } else {
+
+      showToast(
+        "Usuario o contraseña incorrectos",
+        "error"
+      );
+
+    }
+
+  });
+
 }
 
 // =========================
