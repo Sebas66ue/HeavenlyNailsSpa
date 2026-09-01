@@ -1,14 +1,14 @@
 // =========================
 // CONFIGURACIÓN DE SUPABASE
 // =========================
-const supabaseUrl = "https://TU-PROYECTO.supabase.co";
-const supabaseKey = "TU_ANON_KEY";
+const supabaseUrl = "https://rgxybkmglfdxrgluzfwc.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJneHlia21nbGZkeHJnbHV6ZndjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMDc3MzYsImV4cCI6MjEwMzc4MzczNn0.HhocvsjUxVuNW78sVTJmfNDJmrBb_TsU6KvIAscDsJI";
 const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
 const OWNER_USERNAME = "Heaven Ulabarri";
 const OWNER_PASSWORD = "micielito0";
 const ADMIN_SESSION_KEY = "heaven_admin_session";
-const PASSWORD_VERSION = "v1"; // cambia este valor si cambias la contraseña para cerrar sesiones
+const PASSWORD_VERSION = "v1";
 
 // =========================
 // HELPERS
@@ -28,9 +28,9 @@ function showToast(message, type = "success") {
 }
 
 function getTodayISO() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString().split("T")[0];
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  return date.toISOString().split("T")[0];
 }
 
 function formatDateForDisplay(dateStr) {
@@ -38,16 +38,8 @@ function formatDateForDisplay(dateStr) {
   return new Intl.DateTimeFormat("es-MX", {
     weekday: "short",
     day: "numeric",
-    month: "short",
+    month: "short"
   }).format(date);
-}
-
-function formatDateToInput(date) {
-  const d = new Date(date);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }
 
 function isOwnerLoggedIn() {
@@ -73,13 +65,13 @@ function setOwnerSession(loggedIn) {
     JSON.stringify({
       loggedIn,
       username: OWNER_USERNAME,
-      passwordVersion: PASSWORD_VERSION,
+      passwordVersion: PASSWORD_VERSION
     })
   );
 }
 
 // =========================
-// FUNCIONES DE DISPONIBILIDAD
+// CARGAR DISPONIBILIDAD
 // =========================
 async function loadAvailability() {
   const today = getTodayISO();
@@ -119,20 +111,22 @@ function renderAvailabilityUI(slots) {
     });
   }
 
-  // Si tu página tiene un calendario dinámico
   if (calendarRoot) {
     calendarRoot.innerHTML = "";
+
     uniqueDates.forEach((date) => {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "calendar-day";
       btn.dataset.date = date;
       btn.textContent = formatDateForDisplay(date);
+
       btn.addEventListener("click", () => {
         document.querySelectorAll(".calendar-day").forEach((el) => el.classList.remove("active"));
         btn.classList.add("active");
         renderTimeSlotsForDate(date, slots);
       });
+
       calendarRoot.appendChild(btn);
     });
 
@@ -145,7 +139,9 @@ function renderAvailabilityUI(slots) {
 
   if (slotList && !calendarRoot) {
     const selectedDate = dateSelect?.value || uniqueDates[0];
-    if (selectedDate) renderTimeSlotsForDate(selectedDate, slots);
+    if (selectedDate) {
+      renderTimeSlotsForDate(selectedDate, slots);
+    }
   }
 }
 
@@ -155,7 +151,9 @@ function renderTimeSlotsForDate(date, slots) {
 
   if (!slotList) return;
 
-  const availableSlots = slots.filter((slot) => slot.date === date && slot.is_available === true);
+  const availableSlots = slots.filter(
+    (slot) => slot.date === date && slot.is_available === true
+  );
 
   slotList.innerHTML = "";
 
@@ -177,6 +175,7 @@ function renderTimeSlotsForDate(date, slots) {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".slot-btn").forEach((el) => el.classList.remove("selected"));
       btn.classList.add("selected");
+
       if (selectedSlotInput) {
         selectedSlotInput.value = `${slot.date} ${slot.time}`;
       }
@@ -201,17 +200,17 @@ async function submitBooking(event) {
   const selectedSlot = document.getElementById("selectedSlot")?.value;
 
   if (!name || !phone || !email || !service || !selectedSlot) {
-    showToast("Completa todos los campos y selecciona una fecha/hora", "error");
+    showToast("Completa todos los campos y selecciona una fecha y hora", "error");
     return;
   }
 
   const [date, time] = selectedSlot.split(" ");
+
   if (!date || !time) {
     showToast("Selecciona una fecha y hora válidas", "error");
     return;
   }
 
-  // Verificar que el horario siga disponible
   const { data: slotData, error: slotError } = await supabase
     .from("availability")
     .select("*")
@@ -240,20 +239,26 @@ async function submitBooking(event) {
     time,
     notes: notes || "",
     status: "pending",
-    created_at: new Date().toISOString(),
+    created_at: new Date().toISOString()
   };
 
-  const { data, error } = await supabase.from("appointments").insert([payload]).select();
+  const { data, error } = await supabase
+    .from("appointments")
+    .insert([payload])
+    .select();
 
   if (error) {
-    console.error("Error insertando agenda:", error);
+    console.error("Error insertando cita:", error);
     showToast("No se pudo guardar la cita", "error");
     return;
   }
 
   const { error: updateError } = await supabase
     .from("availability")
-    .update({ is_available: false, booked_by: data?.[0]?.id || null })
+    .update({
+      is_available: false,
+      booked_by: data?.[0]?.id || null
+    })
     .eq("id", slotData.id);
 
   if (updateError) {
@@ -261,6 +266,7 @@ async function submitBooking(event) {
   }
 
   form.reset();
+
   const selectedSlotInput = document.getElementById("selectedSlot");
   if (selectedSlotInput) selectedSlotInput.value = "";
 
@@ -270,7 +276,7 @@ async function submitBooking(event) {
 }
 
 // =========================
-// VER AGENDAS PENDIENTES
+// AGENDAS PENDIENTES
 // =========================
 async function loadAppointments() {
   const container = document.getElementById("pendingAppointments");
@@ -332,7 +338,7 @@ async function loadAppointments() {
 }
 
 // =========================
-// VER AGENDAS REGISTRADAS
+// AGENDAS REGISTRADAS
 // =========================
 async function loadRegisteredAppointments() {
   const container = document.getElementById("registeredAppointments");
@@ -396,7 +402,7 @@ function bindAppointmentActions() {
         .from("appointments")
         .update({
           status: "done",
-          updated_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         })
         .eq("id", id);
 
@@ -421,7 +427,7 @@ function bindAppointmentActions() {
         .from("appointments")
         .update({
           status: "cancelled",
-          updated_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         })
         .eq("id", id);
 
@@ -431,7 +437,6 @@ function bindAppointmentActions() {
         return;
       }
 
-      // Liberar horario en disponibilidad
       const { data: appointment } = await supabase
         .from("appointments")
         .select("date, time")
@@ -441,7 +446,10 @@ function bindAppointmentActions() {
       if (appointment) {
         await supabase
           .from("availability")
-          .update({ is_available: true, booked_by: null })
+          .update({
+            is_available: true,
+            booked_by: null
+          })
           .eq("date", appointment.date)
           .eq("time", appointment.time);
       }
@@ -497,7 +505,7 @@ function showOwnerPanel() {
   }
 }
 
-async function logoutOwner() {
+function logoutOwner() {
   setOwnerSession(false);
   showOwnerPanel();
   showToast("Sesión cerrada");
@@ -517,7 +525,10 @@ async function loadSocialLinks() {
   const container = document.getElementById("socialLinks");
   if (!container) return;
 
-  const { data, error } = await supabase.from("social_links").select("*").order("id", { ascending: true });
+  const { data, error } = await supabase
+    .from("social_links")
+    .select("*")
+    .order("id", { ascending: true });
 
   if (error) {
     console.error("Error loading social links:", error);
@@ -552,12 +563,11 @@ async function initSupabaseApp() {
     bookingForm.addEventListener("submit", submitBooking);
   }
 
+  await loadAvailability();
+
   if (isOwnerLoggedIn()) {
     await loadAppointments();
     await loadRegisteredAppointments();
-    await loadAvailability();
-  } else {
-    await loadAvailability();
   }
 
   await loadSocialLinks();
