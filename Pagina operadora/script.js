@@ -8,93 +8,64 @@ const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 const OWNER_USERNAME = "Heaven Ulabarri";
 const OWNER_PASSWORD = "micielito";
-const ADMIN_SESSION_KEY = "heaven_admin_session";
-const PASSWORD_VERSION = "v1";
+const ADMIN_SESSION_KEY = "nailsSpaOwnerSession";
 
-function isOwnerLoggedIn() {
-  const stored = localStorage.getItem(ADMIN_SESSION_KEY);
-  if (!stored) return false;
+function isOwnerUnlocked() {
+  const savedSession = localStorage.getItem(OWNER_SESSION_KEY);
+  if (!savedSession) return localStorage.getItem('nailsSpaOwner') === 'true';
 
   try {
-    const session = JSON.parse(stored);
-    return (
-      session &&
-      session.loggedIn === true &&
-      session.username === OWNER_USERNAME &&
-      session.passwordVersion === PASSWORD_VERSION
-    );
-  } catch {
+    const parsed = JSON.parse(savedSession);
+    return parsed.username === OWNER_NAME && parsed.password === OWNER_PASSWORD;
+  } catch (error) {
     return false;
   }
 }
 
-function setOwnerSession(loggedIn) {
-  localStorage.setItem(
-    ADMIN_SESSION_KEY,
-    JSON.stringify({
-      loggedIn,
-      username: OWNER_USERNAME,
-      passwordVersion: PASSWORD_VERSION
-    })
-  );
-}
+function setOwnerAccess(isUnlocked) {
+  localStorage.setItem('nailsSpaOwner', isUnlocked ? 'true' : 'false');
 
-function showOwnerState() {
-  const form = document.getElementById("ownerLoginForm");
-  const sessionControls = document.getElementById("ownerSessionControls");
-
-  if (!form || !sessionControls) return;
-
-  if (isOwnerLoggedIn()) {
-    form.classList.add("hidden");
-    sessionControls.classList.remove("hidden");
+  if (isUnlocked) {
+    localStorage.setItem(
+      OWNER_SESSION_KEY,
+      JSON.stringify({ username: OWNER_NAME, password: OWNER_PASSWORD })
+    );
   } else {
-    form.classList.remove("hidden");
-    sessionControls.classList.add("hidden");
+    localStorage.removeItem(OWNER_SESSION_KEY);
+  }
+
+  ownerOnlySections.forEach((section) => {
+    section.classList.toggle('hidden', !isUnlocked);
+  });
+
+  if (ownerLoginForm) {
+    ownerLoginForm.classList.toggle('hidden', isUnlocked);
+  }
+
+  if (ownerSessionControls) {
+    ownerSessionControls.classList.toggle('hidden', !isUnlocked);
+  }
+
+  if (ownerLoginSection) {
+    ownerLoginSection.classList.toggle('hidden', isUnlocked);
   }
 }
 
-function setupOwnerLogin() {
-  const form = document.getElementById("ownerLoginForm");
+function unlockOwnerAccess(username, password) {
+  if (username === OWNER_NAME && password === OWNER_PASSWORD) {
+    setOwnerAccess(true);
+    showToast('Bienvenido, Heaven.');
+    return true;
+  }
 
-  if (!form) return;
-
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-
-    const formData = new FormData(form);
-    const username = formData.get("username")?.toString().trim();
-    const password = formData.get("password")?.toString();
-
-    if (username === OWNER_USERNAME && password === OWNER_PASSWORD) {
-      setOwnerSession(true);
-      showOwnerState();
-      showToast("Sesión iniciada correctamente");
-      form.reset();
-      return;
-    }
-
-    showToast("Usuario o contraseña incorrectos", "error");
-  });
+  showToast('Usuario o contraseña incorrectos.');
+  return false;
 }
 
-function setupOwnerLogout() {
-  const logoutBtn = document.getElementById("logoutOwnerBtn");
-
-  if (!logoutBtn) return;
-
-  logoutBtn.addEventListener("click", () => {
-    setOwnerSession(false);
-    showOwnerState();
-    showToast("Sesión cerrada");
-  });
+function lockOwnerAccess() {
+  setOwnerAccess(false);
+  showToast('Sesión cerrada.');
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  setupOwnerLogin();
-  setupOwnerLogout();
-  showOwnerState();
-});
 // =========================
 // CARGAR DISPONIBILIDAD
 // =========================
