@@ -7,7 +7,7 @@ const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 const OWNER_USERNAME = "Heaven Ulabarri";
-const OWNER_PASSWORD = "micielito0";
+const OWNER_PASSWORD = "micielito";
 const ADMIN_SESSION_KEY = "heaven_admin_session";
 const PASSWORD_VERSION = "v1";
 
