@@ -15,6 +15,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </head>
   <body>
     <header class="site-header">
@@ -24,24 +25,24 @@
             <svg viewBox="0 0 220 220" role="img" aria-label="Logo Heavenly Nails Spa">
               <defs>
                 <linearGradient id="headerLogoGradient" x1="0%" x2="100%" y1="0%" y2="100%">
-                  <stop offset="0%" stop-color="#d8c4df" />
-                  <stop offset="100%" stop-color="#c9b1d5" />
+                  <stop offset="0%" stop-color="#d8c4df"/>
+                  <stop offset="100%" stop-color="#c9b1d5"/>
                 </linearGradient>
               </defs>
-              <circle cx="110" cy="110" r="96" fill="url(#headerLogoGradient)" />
-              <circle cx="110" cy="110" r="87" fill="none" stroke="#d4b15d" stroke-width="4" />
-              <path d="M45 68 C60 45, 93 38, 110 58 C125 38, 160 46, 175 68" fill="none" stroke="#d4b15d" stroke-width="4" stroke-linecap="round" />
-              <path d="M60 138 C 82 115, 96 108, 110 120 C 123 108, 142 113, 160 138" fill="none" stroke="#d4b15d" stroke-width="3.5" stroke-linecap="round" />
+              <circle cx="110" cy="110" r="96" fill="url(#headerLogoGradient)"/>
+              <circle cx="110" cy="110" r="87" fill="none" stroke="#d4b15d" stroke-width="4"/>
+              <path d="M45 68 C60 45, 93 38, 110 58 C125 38, 160 46, 175 68" fill="none" stroke="#d4b15d" stroke-width="4" stroke-linecap="round"/>
+              <path d="M60 138 C 82 115, 96 108, 110 120 C 123 108, 142 113, 160 138" fill="none" stroke="#d4b15d" stroke-width="3.5" stroke-linecap="round"/>
               <text x="110" y="108" text-anchor="middle" font-size="32" font-family="Georgia, serif" font-style="italic" fill="#d4b15d" letter-spacing="1.2">Heavenly</text>
               <text x="110" y="136" text-anchor="middle" font-size="16" font-family="Arial, sans-serif" letter-spacing="8" fill="#5d4961">NAIL SPA</text>
-              <path d="M42 156 C62 146, 77 146, 90 160 C70 171, 58 177, 41 174" fill="none" stroke="#d4b15d" stroke-width="3.5" stroke-linecap="round" />
-              <path d="M178 156 C158 146, 143 146, 130 160 C150 171, 162 177, 179 174" fill="none" stroke="#d4b15d" stroke-width="3.5" stroke-linecap="round" />
-              <path d="M78 168 C66 190, 54 197, 50 194" fill="none" stroke="#d4b15d" stroke-width="3.2" stroke-linecap="round" />
-              <path d="M142 168 C154 190, 166 197, 170 194" fill="none" stroke="#d4b15d" stroke-width="3.2" stroke-linecap="round" />
-              <circle cx="72" cy="177" r="3" fill="#d4b15d" />
-              <circle cx="148" cy="177" r="3" fill="#d4b15d" />
-              <path d="M91 170 C100 177, 102 183, 104 192" fill="none" stroke="#d4b15d" stroke-width="3" stroke-linecap="round" />
-              <path d="M129 170 C120 177, 118 183, 116 192" fill="none" stroke="#d4b15d" stroke-width="3" stroke-linecap="round" />
+              <path d="M42 156 C62 146, 77 146, 90 160 C70 171, 58 177, 41 174" fill="none" stroke="#d4b15d" stroke-width="3.5" stroke-linecap="round"/>
+              <path d="M178 156 C158 146, 143 146, 130 160 C150 171, 162 177, 179 174" fill="none" stroke="#d4b15d" stroke-width="3.5" stroke-linecap="round"/>
+              <path d="M78 168 C66 190, 54 197, 50 194" fill="none" stroke="#d4b15d" stroke-width="3.2" stroke-linecap="round"/>
+              <path d="M142 168 C154 190, 166 197, 170 194" fill="none" stroke="#d4b15d" stroke-width="3.2" stroke-linecap="round"/>
+              <circle cx="72" cy="177" r="3" fill="#d4b15d"/>
+              <circle cx="148" cy="177" r="3" fill="#d4b15d"/>
+              <path d="M91 170 C100 177, 102 183, 104 192" fill="none" stroke="#d4b15d" stroke-width="3" stroke-linecap="round"/>
+              <path d="M129 170 C120 177, 118 183, 116 192" fill="none" stroke="#d4b15d" stroke-width="3" stroke-linecap="round"/>
             </svg>
           </span>
           <span class="brand-name brand-script">HeavenlyNailsSpa</span>
@@ -68,7 +69,6 @@
               En Nails SPA diseñamos manicuras premium, detalles sofisticados y atención
               personalizada para que salgas radiante cada vez.
             </p>
-
             <div class="hero-actions">
               <a href="#agenda" class="primary-btn">Agendar cita</a>
               <a href="#servicios" class="secondary-btn">Ver servicios</a>
@@ -83,7 +83,10 @@
 
           <div class="hero-visual" aria-label="Diseños de uñas premium">
             <div class="glass-card feature-card">
-              <img src="Imagenes/IMG-20260831-WA0023.jpg" alt="Manicura elegante" />
+              <img
+                src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&q=80"
+                alt="Manicura elegante"
+              />
               <div class="feature-badge">Trending</div>
             </div>
             <div class="mini-card card-one">
@@ -94,6 +97,11 @@
               <span>Especial</span>
               <strong>De 2 a 3 semanas</strong>
             </div>
+            <img
+              class="hero-special-image"
+              src="file:///C:/Users/USER/AppData/Roaming/Code/agentSessionData/930819b4-9c26-41f4-b680-821073402710/attachments/dd314391-4905-4723-bfa3-d694383428a7/IMG-20260831-WA0023.jpg"
+              alt="Diseño especial de uñas con acabado rosado y blanco"
+            />
           </div>
         </div>
       </section>
@@ -166,15 +174,15 @@
                   <p>Revisión y mantenimiento para prolongar tu manicure.</p>
                 </div>
               </div>
-              <span class="pricing-price">70mil</span>
+              <span class="pricing-price">50mil</span>
             </article>
 
             <article class="pricing-row">
               <div class="pricing-info">
-                <span class="pricing-icon">✹</span>
+                <span class="pricing-icon">✦</span>
                 <div>
-                  <h3>Baño en Polygel en uña natural</h3>
-                  <p>Refuerzo suave y sofisticado para uñas naturales.</p>
+                  <h3>Manos semipermanente</h3>
+                  <p>Acabado limpio y sofisticado para un look diario elegante.</p>
                 </div>
               </div>
               <span class="pricing-price">60mil</span>
@@ -182,64 +190,42 @@
 
             <article class="pricing-row">
               <div class="pricing-info">
-                <span class="pricing-icon">✷</span>
-                <div>
-                  <h3>Manos semipermanente</h3>
-                  <p>Color y brillo elegante con duración prolongada.</p>
-                </div>
-              </div>
-              <span class="pricing-price">35mil</span>
-            </article>
-
-            <article class="pricing-row">
-              <div class="pricing-info">
-                <span class="pricing-icon">✷</span>
+                <span class="pricing-icon">✧</span>
                 <div>
                   <h3>Pies semipermanente</h3>
-                  <p>Acabado refinado para una apariencia impecable en los pies.</p>
+                  <p>Durabilidad y estilo para tus pies con un acabado pulido.</p>
                 </div>
               </div>
-              <span class="pricing-price">35mil</span>
-            </article>
-
-            <article class="pricing-row">
-              <div class="pricing-info">
-                <span class="pricing-icon">✦</span>
-                <div>
-                  <h3>Semipermanente caballero</h3>
-                  <p>Estilo discreto y elegante para un look limpio y moderno.</p>
-                </div>
-              </div>
-              <span class="pricing-price">30mil</span>
+              <span class="pricing-price">65mil</span>
             </article>
           </div>
         </div>
       </section>
 
-      <section class="gallery" id="galeria">
+      <section class="gallery-section" id="galeria">
         <div class="container">
           <div class="section-heading centered">
             <p class="eyebrow">Galería</p>
-            <h2>Inspiración para tu próximo look</h2>
+            <h2>Estilos que inspiran</h2>
           </div>
 
           <div class="gallery-grid">
-            <img src="Imagenes/778755860_1694585448510915_5595043075358019796_n.jpg" alt="Diseño de uñas con francés blanco y dorado" />
-            <img src="Imagenes/739165199_1657930385509755_1121486521404689638_n.jpg" alt="Diseño de uñas pastel con flores" />
-            <img src="Imagenes/747536169_1664109408225186_3478968894974703904_n.jpg" alt="Diseño de uñas con mariposas y flores blancas" />
-            <img src="Imagenes/739809401_1657930845509709_3168426753710657229_n.jpg" alt="Diseño de uñas con negro y dorado" />
+            <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&q=80" alt="Uñas rosas premium" />
+            <img src="https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=900&q=80" alt="Diseño de uñas con brillo" />
+            <img src="https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=900&q=80" alt="Manicura con acabado elegante" />
+            <img src="https://images.unsplash.com/photo-1600948836101-fc9e0f8f3875?auto=format&fit=crop&w=900&q=80" alt="Nails spa con diseño artístico" />
           </div>
         </div>
       </section>
 
-      <section class="booking" id="agenda">
-        <div class="container booking-grid">
+      <section class="booking-section" id="agenda">
+        <div class="container booking-shell">
           <div class="booking-copy">
             <p class="eyebrow">Agenda tu cita</p>
             <h2>Reserva tu momento de belleza</h2>
             <p>
-              Escoge tu servicio favorito, selecciona un horario y nuestro equipo te atenderá
-              con la mejor experiencia en Nails SPA.
+              Elige el servicio, el día y la hora que mejor te convenga. Tus citas
+              se revisan en tiempo real y se reservan solo cuando quedan disponibles.
             </p>
 
             <div class="info-boxes">
@@ -258,24 +244,18 @@
             <div class="field-row">
               <label>
                 Nombre completo
-                <input id="clientName" type="text" name="name" placeholder="Tu nombre" required />
+                <input type="text" name="name" placeholder="Tu nombre" required />
               </label>
-
               <label>
                 Teléfono
-                <input id="clientPhone" type="tel" name="phone" placeholder="555 123 4567" required />
+                <input type="tel" name="phone" placeholder="555 123 4567" required />
               </label>
             </div>
 
             <div class="field-row">
               <label>
-                Email
-                <input id="clientEmail" type="email" name="email" placeholder="tuemail@correo.com" required />
-              </label>
-
-              <label>
                 Servicio
-                <select id="serviceSelect" name="service" required>
+                <select name="service" required>
                   <option value="">Selecciona una opción</option>
                   <option value="Polygel">Polygel</option>
                   <option value="Acrílicas">Acrílicas</option>
@@ -291,11 +271,10 @@
 
             <div class="calendar-panel">
               <div class="calendar-header">
-                <button type="button" class="calendar-nav" aria-label="Mes anterior">‹</button>
+                <button type="button" id="prevMonth" class="calendar-nav" aria-label="Mes anterior">‹</button>
                 <h3 id="calendarMonthLabel">Mes</h3>
-                <button type="button" class="calendar-nav" aria-label="Mes siguiente">›</button>
+                <button type="button" id="nextMonth" class="calendar-nav" aria-label="Mes siguiente">›</button>
               </div>
-
               <div class="calendar-weekdays">
                 <span>Dom</span>
                 <span>Lun</span>
@@ -305,20 +284,20 @@
                 <span>Vie</span>
                 <span>Sáb</span>
               </div>
-
-              <div id="calendar" class="calendar-days"></div>
+              <div id="calendarDays" class="calendar-days"></div>
             </div>
 
             <div class="slot-picker">
               <label>Hora disponible</label>
-              <div id="slotList" class="slot-options" aria-live="polite"></div>
+              <div id="slotOptions" class="slot-options" aria-live="polite"></div>
             </div>
 
-            <input type="hidden" id="selectedSlot" />
+            <input type="hidden" name="date" id="selectedDate" />
+            <input type="hidden" name="time" id="selectedTime" />
 
             <label>
               Detalles adicionales
-              <textarea id="clientNotes" name="notes" rows="4" placeholder="Cuéntanos qué estilo te gustaría..."></textarea>
+              <textarea name="notes" rows="4" placeholder="Cuéntanos qué estilo te gustaría..."></textarea>
             </label>
 
             <button type="submit" class="primary-btn submit-btn">Confirmar cita</button>
@@ -326,7 +305,7 @@
         </div>
       </section>
 
-      <section class="availability-admin owner-only hidden" id="availabilitySection" aria-labelledby="availabilityTitle">
+      <section class="availability-admin owner-only hidden" aria-labelledby="availabilityTitle">
         <div class="container availability-wrap">
           <div class="section-heading">
             <p class="eyebrow">Disponibilidad</p>
@@ -339,12 +318,10 @@
                 Fecha disponible
                 <input type="date" name="slotDate" required />
               </label>
-
               <label>
                 Hora disponible
                 <input type="time" name="slotTime" required />
               </label>
-
               <button type="submit" class="secondary-btn">Agregar disponibilidad</button>
             </form>
 
@@ -356,7 +333,7 @@
         </div>
       </section>
 
-      <section class="appointments-admin owner-only hidden" id="adminSection" aria-labelledby="appointmentsTitle">
+      <section class="appointments-admin owner-only hidden" aria-labelledby="appointmentsTitle">
         <div class="container">
           <div class="section-heading">
             <p class="eyebrow">Administración</p>
@@ -368,13 +345,13 @@
             <button type="button" class="secondary-btn" id="exportAppointments">Enviar resumen por correo</button>
           </div>
 
-          <div id="pendingAppointments" class="appointments-list" aria-live="polite">
+          <div id="appointmentsList" class="appointments-list" aria-live="polite">
             <p class="empty-state">No hay citas agendadas todavía.</p>
           </div>
         </div>
       </section>
 
-      <section class="registered-appointments-admin owner-only hidden" id="agendaSection" aria-labelledby="registeredAppointmentsTitle">
+      <section class="registered-appointments-admin owner-only hidden" aria-labelledby="registeredAppointmentsTitle">
         <div class="container">
           <div class="section-heading">
             <p class="eyebrow">Historial</p>
@@ -385,7 +362,7 @@
             <span id="registeredAppointmentsCount">0 agendas</span>
           </div>
 
-          <div id="registeredAppointments" class="appointments-list" aria-live="polite">
+          <div id="registeredAppointmentsList" class="appointments-list" aria-live="polite">
             <p class="empty-state">Aún no hay agendas atendidas.</p>
           </div>
         </div>
@@ -401,11 +378,20 @@
           <h2 id="socialTitle">Conéctate con Nails SPA</h2>
         </div>
 
-        <div class="social-links" id="socialLinks"></div>
+        <div class="social-links">
+          <a class="social-btn instagram" href="https://www.instagram.com/" target="_blank" rel="noreferrer" aria-label="Instagram">
+            <span class="social-icon">◎</span>
+            <span class="social-label">HeavenlyNailsSpa</span>
+          </a>
+          <a class="social-btn facebook" href="https://www.facebook.com/" target="_blank" rel="noreferrer" aria-label="Facebook">
+            <span class="social-icon">f</span>
+            <span class="social-label">HeavenlyNailsSpa</span>
+          </a>
+        </div>
       </div>
     </section>
 
-    <section class="admin-login-section" id="ownerLoginSection">
+    <section class="admin-login-section" id="adminLoginSection">
       <div class="container login-panel">
         <div class="login-copy">
           <p class="eyebrow">Acceso exclusivo</p>
@@ -417,12 +403,10 @@
             Nombre de usuario
             <input type="text" name="username" placeholder="Heaven Ulabarri" required />
           </label>
-
           <label>
             Contraseña
             <input type="password" name="password" placeholder="********" required />
           </label>
-
           <button type="submit" class="primary-btn">Iniciar sesión</button>
         </form>
 
@@ -441,33 +425,36 @@
               <svg viewBox="0 0 220 220" role="img" aria-label="Logo Heavenly Nails Spa">
                 <defs>
                   <linearGradient id="footerLogoGradient" x1="0%" x2="100%" y1="0%" y2="100%">
-                    <stop offset="0%" stop-color="#d8c4df" />
-                    <stop offset="100%" stop-color="#c9b1d5" />
+                    <stop offset="0%" stop-color="#d8c4df"/>
+                    <stop offset="100%" stop-color="#c9b1d5"/>
                   </linearGradient>
                 </defs>
-                <circle cx="110" cy="110" r="96" fill="url(#footerLogoGradient)" />
-                <circle cx="110" cy="110" r="87" fill="none" stroke="#d4b15d" stroke-width="4" />
-                <path d="M45 68 C60 45, 93 38, 110 58 C125 38, 160 46, 175 68" fill="none" stroke="#d4b15d" stroke-width="4" stroke-linecap="round" />
-                <path d="M60 138 C 82 115, 96 108, 110 120 C 123 108, 142 113, 160 138" fill="none" stroke="#d4b15d" stroke-width="3.5" stroke-linecap="round" />
+                <circle cx="110" cy="110" r="96" fill="url(#footerLogoGradient)"/>
+                <circle cx="110" cy="110" r="87" fill="none" stroke="#d4b15d" stroke-width="4"/>
+                <path d="M45 68 C60 45, 93 38, 110 58 C125 38, 160 46, 175 68" fill="none" stroke="#d4b15d" stroke-width="4" stroke-linecap="round"/>
+                <path d="M60 138 C 82 115, 96 108, 110 120 C 123 108, 142 113, 160 138" fill="none" stroke="#d4b15d" stroke-width="3.5" stroke-linecap="round"/>
                 <text x="110" y="108" text-anchor="middle" font-size="32" font-family="Georgia, serif" font-style="italic" fill="#d4b15d" letter-spacing="1.2">Heavenly</text>
                 <text x="110" y="136" text-anchor="middle" font-size="16" font-family="Arial, sans-serif" letter-spacing="8" fill="#5d4961">NAIL SPA</text>
-                <path d="M42 156 C62 146, 77 146, 90 160 C70 171, 58 177, 41 174" fill="none" stroke="#d4b15d" stroke-width="3.5" stroke-linecap="round" />
-                <path d="M178 156 C158 146, 143 146, 130 160 C150 171, 162 177, 179 174" fill="none" stroke="#d4b15d" stroke-width="3.5" stroke-linecap="round" />
-                <path d="M78 168 C66 190, 54 197, 50 194" fill="none" stroke="#d4b15d" stroke-width="3.2" stroke-linecap="round" />
-                <path d="M142 168 C154 190, 166 197, 170 194" fill="none" stroke="#d4b15d" stroke-width="3.2" stroke-linecap="round" />
-                <circle cx="72" cy="177" r="3" fill="#d4b15d" />
-                <circle cx="148" cy="177" r="3" fill="#d4b15d" />
-                <path d="M91 170 C100 177, 102 183, 104 192" fill="none" stroke="#d4b15d" stroke-width="3" stroke-linecap="round" />
-                <path d="M129 170 C120 177, 118 183, 116 192" fill="none" stroke="#d4b15d" stroke-width="3" stroke-linecap="round" />
+                <path d="M42 156 C62 146, 77 146, 90 160 C70 171, 58 177, 41 174" fill="none" stroke="#d4b15d" stroke-width="3.5" stroke-linecap="round"/>
+                <path d="M178 156 C158 146, 143 146, 130 160 C150 171, 162 177, 179 174" fill="none" stroke="#d4b15d" stroke-width="3.5" stroke-linecap="round"/>
+                <path d="M78 168 C66 190, 54 197, 50 194" fill="none" stroke="#d4b15d" stroke-width="3.2" stroke-linecap="round"/>
+                <path d="M142 168 C154 190, 166 197, 170 194" fill="none" stroke="#d4b15d" stroke-width="3.2" stroke-linecap="round"/>
+                <circle cx="72" cy="177" r="3" fill="#d4b15d"/>
+                <circle cx="148" cy="177" r="3" fill="#d4b15d"/>
+                <path d="M91 170 C100 177, 102 183, 104 192" fill="none" stroke="#d4b15d" stroke-width="3" stroke-linecap="round"/>
+                <path d="M129 170 C120 177, 118 183, 116 192" fill="none" stroke="#d4b15d" stroke-width="3" stroke-linecap="round"/>
               </svg>
             </span>
             <span class="brand-name brand-script">HeavenlyNailsSpa</span>
           </div>
         </div>
-
         <p>© 2026 Nails SPA. Cuidado y estilo para cada detalle.</p>
       </div>
     </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
