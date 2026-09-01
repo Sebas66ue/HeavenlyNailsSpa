@@ -1,8 +1,8 @@
 // =========================
 // CONFIGURACIÓN DE SUPABASE
 // =========================
-const supabaseUrl = "https://rgxybkmglfdxrgluzfwc.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJneHlia21nbGZkeHJnbHV6ZndjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMDc3MzYsImV4cCI6MjEwMzc4MzczNn0.HhocvsjUxVuNW78sVTJmfNDJmrBb_TsU6KvIAscDsJI";
+const supabaseUrl = "https://TU-PROYECTO.supabase.co";
+const supabaseKey = "TU_ANON_KEY";
 
 const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
 
@@ -575,4 +575,5 @@ async function initSupabaseApp() {
 }
 
 document.addEventListener("DOMContentLoaded", initSupabaseApp);
+
 
