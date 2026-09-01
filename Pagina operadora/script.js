@@ -35,6 +35,10 @@ function showToast(message) {
   }, 2500);
 }
 
+function isOwnerLoggedIn() {
+  return isOwnerUnlocked();
+}
+
 function isOwnerUnlocked() {
   const savedSession = localStorage.getItem(OWNER_SESSION_KEY);
 
