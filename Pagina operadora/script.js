@@ -7,94 +7,69 @@ const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 const OWNER_USERNAME = "Heaven Ulabarri";
-const OWNER_PASSWORD = "micielito0";
+const OWNER_PASSWORD = "micielito1";
 const ADMIN_SESSION_KEY = "heaven_admin_session";
 const PASSWORD_VERSION = "v1";
 
 // =========================
-// UTILIDADES
+// FUNCIONES GENERALES
 // =========================
-function setOwnerSession(loggedIn) {
+function showToast(message, type = "success") {
+  const toast = document.getElementById("toast");
+  if (!toast) return;
 
-  if (loggedIn) {
+  toast.textContent = message;
+  toast.className = `toast ${type}`;
+  toast.classList.add("show");
 
-    localStorage.setItem(
-      ADMIN_SESSION_KEY,
-      JSON.stringify({
-        loggedIn: true,
-        username: OWNER_USERNAME,
-        passwordVersion: PASSWORD_VERSION
-      })
+  clearTimeout(showToast.timeoutId);
+  showToast.timeoutId = setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2500);
+}
+
+function getTodayISO() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString().split("T")[0];
+}
+
+function formatDateForDisplay(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr + "T00:00:00");
+  return new Intl.DateTimeFormat("es-MX", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }).format(d);
+}
+
+function isOwnerLoggedIn() {
+  const stored = localStorage.getItem(ADMIN_SESSION_KEY);
+  if (!stored) return false;
+
+  try {
+    const session = JSON.parse(stored);
+    return (
+      session &&
+      session.loggedIn === true &&
+      session.username === OWNER_USERNAME &&
+      session.passwordVersion === PASSWORD_VERSION
     );
-
-  } else {
-
-    localStorage.removeItem(ADMIN_SESSION_KEY);
-
+  } catch {
+    return false;
   }
 }
 
-
-// =========================
-// INICIO DE SESIÓN
-// =========================
-
-const ownerLoginForm =
-  document.getElementById("ownerLoginForm");
-
-if (ownerLoginForm) {
-
-  ownerLoginForm.addEventListener("submit", function(event) {
-
-    event.preventDefault();
-
-    const formData =
-      new FormData(ownerLoginForm);
-
-    const username =
-      (formData.get("username") || "")
-        .toString()
-        .trim();
-
-    const password =
-      (formData.get("password") || "")
-        .toString();
-
-    if (
-      username === OWNER_USERNAME &&
-      password === OWNER_PASSWORD
-    ) {
-
-      setOwnerSession(true);
-
-      showToast(
-        "Inicio de sesión correcto",
-        "success"
-      );
-
-      ownerLoginForm.reset();
-
-      // Ocultar formulario de login
-      ownerLoginForm.classList.add("hidden");
-
-      // Mostrar las secciones del dueño
-      document
-        .querySelectorAll(".owner-only")
-        .forEach((element) => {
-          element.classList.remove("hidden");
-        });
-
-    } else {
-
-      showToast(
-        "Usuario o contraseña incorrectos",
-        "error"
-      );
-
-    }
-
-  });
-
+function setOwnerSession(loggedIn) {
+  localStorage.setItem(
+    ADMIN_SESSION_KEY,
+    JSON.stringify({
+      loggedIn,
+      username: OWNER_USERNAME,
+      passwordVersion: PASSWORD_VERSION,
+    })
+  );
 }
 
 // =========================
