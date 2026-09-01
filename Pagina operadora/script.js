@@ -1,1376 +1,567 @@
-const SUPABASE_URL = 'https://rgxybkmglfdxrgluzfwc.supabase.co';
+// =========================
+// CONFIGURACIÓN DE SUPABASE
+// =========================
+const supabaseUrl = "https://TU-PROYECTO.supabase.co";
+const supabaseKey = "TU_ANON_KEY";
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-const SUPABASE_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJneHlia21nbGZkeHJnbHV6ZndjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMDc3MzYsImV4cCI6MjEwMzc4MzczNn0.HhocvsjUxVuNW78sVTJmfNDJmrBb_TsU6KvIAscDsJI';
+const OWNER_USERNAME = "Heaven Ulabarri";
+const OWNER_PASSWORD = "micielito0";
+const ADMIN_SESSION_KEY = "heaven_admin_session";
+const PASSWORD_VERSION = "v1"; // cambia este valor si cambias la contraseña para cerrar sesiones
 
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
-
-
-// =====================================
-// ELEMENTOS DEL HTML
-// =====================================
-
-const form = document.getElementById('bookingForm');
-const toast = document.getElementById('toast');
-
-const appointmentsList =
-  document.getElementById('appointmentsList');
-
-const appointmentsCount =
-  document.getElementById('appointmentsCount');
-
-const exportAppointmentsBtn =
-  document.getElementById('exportAppointments');
-
-const registeredAppointmentsList =
-  document.getElementById('registeredAppointmentsList');
-
-const registeredAppointmentsCount =
-  document.getElementById('registeredAppointmentsCount');
-
-const availabilityForm =
-  document.getElementById('availabilityForm');
-
-const availabilityList =
-  document.getElementById('availabilityList');
-
-const calendarDays =
-  document.getElementById('calendarDays');
-
-const calendarMonthLabel =
-  document.getElementById('calendarMonthLabel');
-
-const slotOptions =
-  document.getElementById('slotOptions');
-
-const selectedDateInput =
-  document.getElementById('selectedDate');
-
-const selectedTimeInput =
-  document.getElementById('selectedTime');
-
-const prevMonthBtn =
-  document.getElementById('prevMonth');
-
-const nextMonthBtn =
-  document.getElementById('nextMonth');
-
-const ownerLoginForm =
-  document.getElementById('ownerLoginForm');
-
-const ownerSessionControls =
-  document.getElementById('ownerSessionControls');
-
-const logoutOwnerBtn =
-  document.getElementById('logoutOwnerBtn');
-
-const ownerLoginSection =
-  document.getElementById('adminLoginSection');
-
-const ownerOnlySections =
-  document.querySelectorAll('.owner-only');
-
-
-// =====================================
-// DATOS DEL DUEÑO
-// =====================================
-
-const OWNER_NAME = 'Heaven Ulabarri';
-const OWNER_PASSWORD = 'micielito1';
-const OWNER_SESSION_KEY = 'nailsSpaOwnerSession';
-
-
-// =====================================
-// ESTADO
-// =====================================
-
-const state = {
-  currentMonth: new Date(
-    new Date().getFullYear(),
-    new Date().getMonth(),
-    1
-  ),
-  selectedDate: '',
-  selectedTime: ''
-};
-
-
-// =====================================
-// LOGIN DEL DUEÑO
-// =====================================
-
-function isOwnerUnlocked() {
-  return localStorage.getItem(OWNER_SESSION_KEY) === 'true';
-}
-
-function setOwnerAccess(isUnlocked) {
-  if (isUnlocked) {
-    localStorage.setItem(OWNER_SESSION_KEY, 'true');
-  } else {
-    localStorage.removeItem(OWNER_SESSION_KEY);
-  }
-
-  ownerOnlySections.forEach((section) => {
-    section.classList.toggle('hidden', !isUnlocked);
-  });
-
-  if (ownerLoginForm) {
-    ownerLoginForm.classList.toggle('hidden', isUnlocked);
-  }
-
-  if (ownerSessionControls) {
-    ownerSessionControls.classList.toggle('hidden', !isUnlocked);
-  }
-
-  if (ownerLoginSection) {
-    ownerLoginSection.classList.toggle('hidden', isUnlocked);
-  }
-}
-
-function unlockOwnerAccess(username, password) {
-  if (
-    username === OWNER_NAME &&
-    password === OWNER_PASSWORD
-  ) {
-    setOwnerAccess(true);
-    showToast('Bienvenido, Heaven.');
-    return true;
-  }
-
-  showToast('Usuario o contraseña incorrectos.');
-  return false;
-}
-
-function lockOwnerAccess() {
-  setOwnerAccess(false);
-  showToast('Sesión cerrada.');
-}
-
-
-// =====================================
-// UTILIDADES
-// =====================================
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-function showToast(message) {
+// =========================
+// HELPERS
+// =========================
+function showToast(message, type = "success") {
+  const toast = document.getElementById("toast");
   if (!toast) return;
 
   toast.textContent = message;
-  toast.classList.add('show');
+  toast.className = `toast ${type}`;
+  toast.classList.add("show");
 
   clearTimeout(showToast.timeoutId);
-
   showToast.timeoutId = setTimeout(() => {
-    toast.classList.remove('show');
-  }, 2600);
+    toast.classList.remove("show");
+  }, 2500);
 }
 
-function sendEmail(subject, body) {
-  const mailtoUrl =
-    `mailto:creador@nailsspa.com` +
-    `?subject=${encodeURIComponent(subject)}` +
-    `&body=${encodeURIComponent(body)}`;
-
-  window.location.href = mailtoUrl;
+function getTodayISO() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString().split("T")[0];
 }
 
-
-// =====================================
-// FECHAS Y HORAS
-// =====================================
-
-function toDateKey(date) {
-  const localDate = new Date(
-    date.getTime() -
-    date.getTimezoneOffset() * 60000
-  );
-
-  return localDate.toISOString().slice(0, 10);
-}
-
-function formatDate(dateString) {
-  if (!dateString) return 'Sin fecha';
-
-  return new Intl.DateTimeFormat('es-MX', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  }).format(
-    new Date(`${dateString}T12:00:00`)
-  );
-}
-
-function formatTimeLabel(timeString) {
-  if (!timeString) return 'Sin hora';
-
-  const [hours, minutes] = timeString.split(':');
-  const date = new Date();
-
-  date.setHours(
-    Number(hours),
-    Number(minutes),
-    0,
-    0
-  );
-
-  return new Intl.DateTimeFormat('es-MX', {
-    hour: 'numeric',
-    minute: '2-digit'
+function formatDateForDisplay(dateStr) {
+  const date = new Date(dateStr + "T00:00:00");
+  return new Intl.DateTimeFormat("es-MX", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
   }).format(date);
 }
 
-
-// =====================================
-// CITAS
-// =====================================
-
-async function getAppointments() {
-  const { data, error } = await supabaseClient
-    .from('appointments')
-    .select('*')
-    .order('created_at', {
-      ascending: true
-    });
-
-  if (error) {
-    console.error('Error obteniendo citas:', error);
-    return [];
-  }
-
-  return data || [];
+function formatDateToInput(date) {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
-async function addAppointment(appointment) {
-  const { data, error } = await supabaseClient
-    .from('appointments')
-    .insert({
-      name: appointment.name,
-      phone: appointment.phone,
-      service: appointment.service,
-      date: appointment.date,
-      time: appointment.time,
-      notes: appointment.notes || ''
-    })
-    .select()
-    .single();
+function isOwnerLoggedIn() {
+  const stored = localStorage.getItem(ADMIN_SESSION_KEY);
+  if (!stored) return false;
 
-  if (error) {
-    console.error('Error guardando cita:', error);
-    showToast('No se pudo guardar la cita.');
+  try {
+    const session = JSON.parse(stored);
+    return (
+      session &&
+      session.loggedIn === true &&
+      session.username === OWNER_USERNAME &&
+      session.passwordVersion === PASSWORD_VERSION
+    );
+  } catch {
     return false;
   }
-
-  console.log('Cita guardada:', data);
-
-  await renderAppointments();
-  await renderAvailabilityList();
-  await renderCalendar();
-
-  if (state.selectedDate) {
-    await renderSlotOptions(state.selectedDate);
-  }
-
-  return true;
 }
 
-async function cancelAppointment(appointmentId) {
-  const {
-    data: appointment,
-    error: findError
-  } = await supabaseClient
-    .from('appointments')
-    .select('*')
-    .eq('id', appointmentId)
-    .single();
+function setOwnerSession(loggedIn) {
+  localStorage.setItem(
+    ADMIN_SESSION_KEY,
+    JSON.stringify({
+      loggedIn,
+      username: OWNER_USERNAME,
+      passwordVersion: PASSWORD_VERSION,
+    })
+  );
+}
 
-  if (findError || !appointment) {
-    console.error('Error buscando cita:', findError);
-    showToast('No se encontró la cita.');
-    return;
-  }
+// =========================
+// FUNCIONES DE DISPONIBILIDAD
+// =========================
+async function loadAvailability() {
+  const today = getTodayISO();
 
-  const { error } = await supabaseClient
-    .from('appointments')
-    .delete()
-    .eq('id', appointmentId);
+  const { data, error } = await supabase
+    .from("availability")
+    .select("*")
+    .gte("date", today)
+    .order("date", { ascending: true })
+    .order("time", { ascending: true });
 
   if (error) {
-    console.error('Error cancelando cita:', error);
-    showToast('No se pudo cancelar la cita.');
+    console.error("Error loading availability:", error);
+    showToast("No se pudo cargar la disponibilidad", "error");
     return;
   }
 
-  await renderAppointments();
-  await renderAvailabilityList();
-  await renderCalendar();
-
-  if (state.selectedDate) {
-    await renderSlotOptions(state.selectedDate);
-  }
-
-  sendEmail(
-    `Cita cancelada - ${appointment.name}`,
-    buildAppointmentMessage(
-      appointment,
-      'Se canceló la cita'
-    )
-  );
-
-  showToast(
-    `La cita de ${appointment.name} fue cancelada.`
-  );
+  renderAvailabilityUI(data || []);
 }
 
-async function markAppointmentAsHandled(appointmentId) {
-  const {
-    data: appointment,
-    error: getError
-  } = await supabaseClient
-    .from('appointments')
-    .select('*')
-    .eq('id', appointmentId)
-    .single();
+function renderAvailabilityUI(slots) {
+  const calendarRoot = document.getElementById("calendar");
+  const slotList = document.getElementById("slotList");
+  const dateSelect = document.getElementById("dateSelect");
 
-  if (getError || !appointment) {
-    console.error('Error buscando la cita:', getError);
-    showToast('No se pudo encontrar la cita.');
-    return;
-  }
+  if (!calendarRoot && !slotList && !dateSelect) return;
 
-  const { error: insertError } = await supabaseClient
-    .from('registered_appointments')
-    .insert({
-      name: appointment.name,
-      phone: appointment.phone,
-      service: appointment.service,
-      date: appointment.date,
-      time: appointment.time,
-      notes: appointment.notes || '',
-      created_at: appointment.created_at
+  const uniqueDates = [...new Set(slots.map((slot) => slot.date))];
+
+  if (dateSelect) {
+    dateSelect.innerHTML = '<option value="">Selecciona una fecha</option>';
+    uniqueDates.forEach((date) => {
+      const option = document.createElement("option");
+      option.value = date;
+      option.textContent = formatDateForDisplay(date);
+      dateSelect.appendChild(option);
     });
-
-  if (insertError) {
-    console.error(
-      'Error registrando la agenda:',
-      insertError
-    );
-
-    showToast('No se pudo registrar la agenda.');
-    return;
   }
 
-  const { error: deleteError } = await supabaseClient
-    .from('appointments')
-    .delete()
-    .eq('id', appointmentId);
-
-  if (deleteError) {
-    console.error(
-      'Error eliminando la cita:',
-      deleteError
-    );
-
-    showToast(
-      'La agenda se registró, pero no se pudo quitar de citas.'
-    );
-
-    return;
-  }
-
-  await renderAppointments();
-  await renderRegisteredAppointments();
-  await renderAvailabilityList();
-  await renderCalendar();
-
-  if (state.selectedDate) {
-    await renderSlotOptions(state.selectedDate);
-  }
-
-  showToast(
-    `La agenda de ${appointment.name} se registró como atendida.`
-  );
-}
-
-function buildAppointmentMessage(
-  appointment,
-  action = 'Nueva cita agendada'
-) {
-  const lines = [
-    `${action} en Nails SPA.`,
-    '',
-    `Nombre completo: ${appointment.name}`,
-    `Teléfono: ${appointment.phone}`,
-    `Servicio: ${appointment.service}`,
-    `Fecha: ${appointment.date}`,
-    `Hora: ${appointment.time}`,
-    `Detalles: ${appointment.notes || 'Sin detalles adicionales'}`,
-    '',
-    `Creado: ${new Date(
-      appointment.created_at ||
-      appointment.createdAt ||
-      Date.now()
-    ).toLocaleString('es-MX')}`,
-    '',
-    'Gracias.'
-  ];
-
-  return lines.join('\n');
-}
-
-
-// =====================================
-// HISTORIAL DE CITAS ATENDIDAS
-// =====================================
-
-async function getRegisteredAppointments() {
-  const { data, error } = await supabaseClient
-    .from('registered_appointments')
-    .select('*')
-    .order('created_at', {
-      ascending: true
-    });
-
-  if (error) {
-    console.error(
-      'Error obteniendo agendas atendidas:',
-      error
-    );
-
-    return [];
-  }
-
-  return data || [];
-}
-
-
-// =====================================
-// DISPONIBILIDAD
-// =====================================
-
-async function getAvailability() {
-  const { data, error } = await supabaseClient
-    .from('availability')
-    .select('*')
-    .order('date', {
-      ascending: true
-    })
-    .order('time', {
-      ascending: true
-    });
-
-  if (error) {
-    console.error(
-      'Error obteniendo disponibilidad:',
-      error
-    );
-
-    return [];
-  }
-
-  return data || [];
-}
-
-async function getBookedSlots() {
-  const appointments = await getAppointments();
-
-  return new Set(
-    appointments.map((appointment) => {
-      return `${appointment.date}|${appointment.time}`;
-    })
-  );
-}
-
-async function getAvailableSlots() {
-  const availability = await getAvailability();
-  const booked = await getBookedSlots();
-
-  return availability
-    .filter((slot) => {
-      return !booked.has(
-        `${slot.date}|${slot.time}`
-      );
-    })
-    .sort((a, b) => {
-      return `${a.date} ${a.time}`.localeCompare(
-        `${b.date} ${b.time}`
-      );
-    });
-}
-
-async function addAvailability(date, time) {
-  const {
-    data: existing,
-    error: checkError
-  } = await supabaseClient
-    .from('availability')
-    .select('id')
-    .eq('date', date)
-    .eq('time', time)
-    .maybeSingle();
-
-  if (checkError) {
-    console.error(
-      'Error comprobando horario:',
-      checkError
-    );
-
-    showToast('No se pudo comprobar el horario.');
-    return;
-  }
-
-  if (existing) {
-    showToast('Ese horario ya está disponible.');
-    return;
-  }
-
-  const { error } = await supabaseClient
-    .from('availability')
-    .insert({
-      id: `${date}-${time}`,
-      date,
-      time
-    });
-
-  if (error) {
-    console.error(
-      'Error agregando disponibilidad:',
-      error
-    );
-
-    showToast('No se pudo agregar el horario.');
-    return;
-  }
-
-  await renderAvailabilityList();
-  await renderCalendar();
-
-  if (state.selectedDate === date) {
-    await renderSlotOptions(date);
-  }
-
-  showToast('Horario agregado correctamente.');
-}
-
-async function removeAvailability(slotId) {
-  const { error } = await supabaseClient
-    .from('availability')
-    .delete()
-    .eq('id', slotId);
-
-  if (error) {
-    console.error(
-      'Error eliminando horario:',
-      error
-    );
-
-    showToast('No se pudo eliminar el horario.');
-    return;
-  }
-
-  await renderAvailabilityList();
-  await renderCalendar();
-
-  if (state.selectedDate) {
-    await renderSlotOptions(state.selectedDate);
-  }
-
-  showToast('Horario eliminado correctamente.');
-}
-
-
-// =====================================
-// MOSTRAR CITAS
-// =====================================
-
-async function renderAppointments() {
-  const appointments = await getAppointments();
-
-  if (appointmentsCount) {
-    appointmentsCount.textContent =
-      `${appointments.length} cita${
-        appointments.length === 1 ? '' : 's'
-      }`;
-  }
-
-  if (!appointmentsList) return;
-
-  if (!appointments.length) {
-    appointmentsList.innerHTML =
-      '<p class="empty-state">No hay citas agendadas todavía.</p>';
-
-    return;
-  }
-
-  appointmentsList.innerHTML = appointments
-    .map((appointment) => {
-      return `
-        <article class="appointment-card">
-          <div>
-            <h3>${escapeHtml(appointment.name)}</h3>
-
-            <div class="appointment-details">
-              <span>
-                <strong>Tel:</strong>
-                ${escapeHtml(appointment.phone)}
-              </span>
-
-              <span>
-                <strong>Servicio:</strong>
-                ${escapeHtml(appointment.service)}
-              </span>
-
-              <span>
-                <strong>Fecha:</strong>
-                ${escapeHtml(formatDate(appointment.date))}
-              </span>
-
-              <span>
-                <strong>Hora:</strong>
-                ${escapeHtml(formatTimeLabel(appointment.time))}
-              </span>
-
-              <span>
-                <strong>Notas:</strong>
-                ${escapeHtml(
-                  appointment.notes || 'Sin detalles'
-                )}
-              </span>
-            </div>
-          </div>
-
-          <div class="appointment-actions">
-            <button
-              type="button"
-              class="cancel-btn"
-              data-id="${escapeHtml(appointment.id)}"
-            >
-              Cancelar
-            </button>
-
-            <button
-              type="button"
-              class="attended-btn"
-              data-id="${escapeHtml(appointment.id)}"
-            >
-              Agenda atendida
-            </button>
-          </div>
-        </article>
-      `;
-    })
-    .join('');
-}
-
-
-// =====================================
-// MOSTRAR HISTORIAL
-// =====================================
-
-async function renderRegisteredAppointments() {
-  const appointments =
-    await getRegisteredAppointments();
-
-  if (registeredAppointmentsCount) {
-    registeredAppointmentsCount.textContent =
-      `${appointments.length} agenda${
-        appointments.length === 1 ? '' : 's'
-      }`;
-  }
-
-  if (!registeredAppointmentsList) return;
-
-  if (!appointments.length) {
-    registeredAppointmentsList.innerHTML =
-      '<p class="empty-state">Aún no hay agendas atendidas.</p>';
-
-    return;
-  }
-
-  registeredAppointmentsList.innerHTML = appointments
-    .map((appointment) => {
-      return `
-        <article class="appointment-card">
-          <div>
-            <h3>${escapeHtml(appointment.name)}</h3>
-
-            <div class="appointment-details">
-              <span>
-                <strong>Tel:</strong>
-                ${escapeHtml(appointment.phone)}
-              </span>
-
-              <span>
-                <strong>Servicio:</strong>
-                ${escapeHtml(appointment.service)}
-              </span>
-
-              <span>
-                <strong>Fecha:</strong>
-                ${escapeHtml(formatDate(appointment.date))}
-              </span>
-
-              <span>
-                <strong>Hora:</strong>
-                ${escapeHtml(formatTimeLabel(appointment.time))}
-              </span>
-
-              <span>
-                <strong>Notas:</strong>
-                ${escapeHtml(
-                  appointment.notes || 'Sin detalles'
-                )}
-              </span>
-            </div>
-          </div>
-        </article>
-      `;
-    })
-    .join('');
-}
-
-
-// =====================================
-// MOSTRAR DISPONIBILIDAD
-// =====================================
-
-async function renderAvailabilityList() {
-  const availability =
-    await getAvailableSlots();
-
-  if (!availabilityList) return;
-
-  if (!availability.length) {
-    availabilityList.innerHTML =
-      '<p class="empty-state">No hay horarios disponibles por el momento.</p>';
-
-    return;
-  }
-
-  availabilityList.innerHTML = availability
-    .map((slot) => {
-      return `
-        <div class="availability-pill">
-          <span>
-            ${escapeHtml(formatDate(slot.date))}
-            ·
-            ${escapeHtml(formatTimeLabel(slot.time))}
-          </span>
-
-          <button
-            type="button"
-            class="remove-slot-btn"
-            data-slot-id="${escapeHtml(slot.id)}"
-          >
-            ×
-          </button>
-        </div>
-      `;
-    })
-    .join('');
-}
-
-
-// =====================================
-// CALENDARIO
-// =====================================
-
-async function renderCalendar() {
-  if (!calendarDays) return;
-
-  const monthStart = new Date(
-    state.currentMonth.getFullYear(),
-    state.currentMonth.getMonth(),
-    1
-  );
-
-  const monthLabel = monthStart.toLocaleString(
-    'es-MX',
-    {
-      month: 'long',
-      year: 'numeric'
-    }
-  );
-
-  if (calendarMonthLabel) {
-    calendarMonthLabel.textContent =
-      monthLabel.charAt(0).toUpperCase() +
-      monthLabel.slice(1);
-  }
-
-  const firstDay = new Date(monthStart);
-  firstDay.setDate(
-    1 - monthStart.getDay()
-  );
-
-  const days = [];
-
-  for (let index = 0; index < 42; index += 1) {
-    const date = new Date(firstDay);
-
-    date.setDate(
-      firstDay.getDate() + index
-    );
-
-    days.push(date);
-  }
-
-  const availableSlots =
-    await getAvailableSlots();
-
-  const availableDates = new Set(
-    availableSlots.map((slot) => slot.date)
-  );
-
-  calendarDays.innerHTML = days
-    .map((date) => {
-      const dateKey = toDateKey(date);
-
-      const isCurrentMonth =
-        date.getMonth() === monthStart.getMonth();
-
-      const isSelected =
-        state.selectedDate === dateKey;
-
-      const hasSlots =
-        availableDates.has(dateKey);
-
-      const classes = ['calendar-day'];
-
-      if (!isCurrentMonth) {
-        classes.push('outside-month');
-      }
-
-      if (hasSlots) {
-        classes.push('has-slots');
-      }
-
-      if (isSelected) {
-        classes.push('selected');
-      }
-
-      return `
-        <button
-          type="button"
-          class="${classes.join(' ')}"
-          data-date="${dateKey}"
-          ${!isCurrentMonth ? 'disabled' : ''}
-        >
-          ${date.getDate()}
-        </button>
-      `;
-    })
-    .join('');
-}
-
-
-// =====================================
-// HORARIOS DEL DÍA
-// =====================================
-
-async function renderSlotOptions(dateKey) {
-  if (!slotOptions) return;
-
-  const availableSlots =
-    await getAvailableSlots();
-
-  const slots = availableSlots.filter((slot) => {
-    return slot.date === dateKey;
-  });
-
-  slotOptions.innerHTML = '';
-
-  if (!slots.length) {
-    slotOptions.innerHTML =
-      '<button type="button" class="slot-btn empty" disabled>No hay horarios disponibles</button>';
-
-    state.selectedTime = '';
-
-    if (selectedTimeInput) {
-      selectedTimeInput.value = '';
-    }
-
-    return;
-  }
-
-  if (!slots.some((slot) => {
-    return slot.time === state.selectedTime;
-  })) {
-    state.selectedTime = slots[0].time;
-  }
-
-  if (selectedTimeInput) {
-    selectedTimeInput.value = state.selectedTime;
-  }
-
-  slots.forEach((slot) => {
-    const button = document.createElement('button');
-
-    button.type = 'button';
-    button.className =
-      `slot-btn${
-        state.selectedTime === slot.time
-          ? ' selected'
-          : ''
-      }`;
-
-    button.textContent =
-      formatTimeLabel(slot.time);
-
-    button.dataset.date = slot.date;
-    button.dataset.time = slot.time;
-
-    slotOptions.appendChild(button);
-  });
-}
-
-async function updateSelectedDate(dateKey) {
-  state.selectedDate = dateKey;
-
-  if (selectedDateInput) {
-    selectedDateInput.value = dateKey;
-  }
-
-  const availableSlots =
-    await getAvailableSlots();
-
-  const slots = availableSlots.filter((slot) => {
-    return slot.date === dateKey;
-  });
-
-  state.selectedTime = slots.length
-    ? slots[0].time
-    : '';
-
-  if (selectedTimeInput) {
-    selectedTimeInput.value = state.selectedTime;
-  }
-
-  await renderCalendar();
-  await renderSlotOptions(dateKey);
-}
-
-
-// =====================================
-// EXPORTAR CITAS
-// =====================================
-
-async function exportAppointments() {
-  const appointments =
-    await getAppointments();
-
-  if (!appointments.length) {
-    showToast('No hay citas para exportar.');
-    return;
-  }
-
-  const text = appointments
-    .map((appointment, index) => {
-      return [
-        `Cita ${index + 1}`,
-        `Nombre: ${appointment.name}`,
-        `Teléfono: ${appointment.phone}`,
-        `Servicio: ${appointment.service}`,
-        `Fecha: ${appointment.date}`,
-        `Hora: ${appointment.time}`,
-        `Notas: ${appointment.notes || 'Sin detalles'}`,
-        ''
-      ].join('\n');
-    })
-    .join('\n');
-
-  sendEmail(
-    'Resumen de citas agendadas',
-    `Estas son las citas activas:\n\n${text}`
-  );
-}
-
-
-// =====================================
-// EVENTOS
-// =====================================
-
-if (availabilityForm) {
-  availabilityForm.addEventListener(
-    'submit',
-    async (event) => {
-      event.preventDefault();
-
-      const formData =
-        new FormData(availabilityForm);
-
-      const date = String(
-        formData.get('slotDate') || ''
-      ).trim();
-
-      const time = String(
-        formData.get('slotTime') || ''
-      ).trim();
-
-      if (!date || !time) {
-        showToast(
-          'Agrega una fecha y una hora válida.'
-        );
-
-        return;
-      }
-
-      await addAvailability(date, time);
-      availabilityForm.reset();
-    }
-  );
-}
-
-if (form) {
-  form.addEventListener(
-    'submit',
-    async (event) => {
-      event.preventDefault();
-
-      const formData = new FormData(form);
-
-      const name =
-        formData.get('name')?.toString().trim() ||
-        'Cliente';
-
-      const phone =
-        formData.get('phone')?.toString().trim() ||
-        'Sin teléfono';
-
-      const service =
-        formData.get('service')?.toString().trim() ||
-        'Servicio';
-
-      const date =
-        String(formData.get('date') || '').trim() ||
-        state.selectedDate;
-
-      const time =
-        String(formData.get('time') || '').trim() ||
-        state.selectedTime;
-
-      const notes =
-        formData.get('notes')?.toString().trim() ||
-        '';
-
-      if (!date || !time) {
-        showToast(
-          'Selecciona un día y una hora disponible.'
-        );
-
-        return;
-      }
-
-      const availableSlots =
-        await getAvailableSlots();
-
-      const slotExists = availableSlots.some((slot) => {
-        return slot.date === date && slot.time === time;
+  // Si tu página tiene un calendario dinámico
+  if (calendarRoot) {
+    calendarRoot.innerHTML = "";
+    uniqueDates.forEach((date) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "calendar-day";
+      btn.dataset.date = date;
+      btn.textContent = formatDateForDisplay(date);
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".calendar-day").forEach((el) => el.classList.remove("active"));
+        btn.classList.add("active");
+        renderTimeSlotsForDate(date, slots);
       });
+      calendarRoot.appendChild(btn);
+    });
 
-      if (!slotExists) {
-        showToast(
-          'Ese horario ya no está disponible. Elige otro.'
-        );
-
-        await renderSlotOptions(date);
-        return;
-      }
-
-      const appointment = {
-        name,
-        phone,
-        service,
-        date,
-        time,
-        notes
-      };
-
-      const saved =
-        await addAppointment(appointment);
-
-      if (!saved) return;
-
-      sendEmail(
-        `Nueva cita agendada - ${appointment.name}`,
-        buildAppointmentMessage(
-          appointment,
-          'Se ha agendado una nueva cita'
-        )
-      );
-
-      form.reset();
-
-      state.selectedDate = '';
-      state.selectedTime = '';
-
-      if (selectedDateInput) {
-        selectedDateInput.value = '';
-      }
-
-      if (selectedTimeInput) {
-        selectedTimeInput.value = '';
-      }
-
-      const nextSlot =
-        (await getAvailableSlots())[0];
-
-      if (nextSlot) {
-        state.selectedDate = nextSlot.date;
-        state.selectedTime = nextSlot.time;
-
-        if (selectedDateInput) {
-          selectedDateInput.value = nextSlot.date;
-        }
-
-        if (selectedTimeInput) {
-          selectedTimeInput.value = nextSlot.time;
-        }
-
-        await renderSlotOptions(nextSlot.date);
-      } else if (slotOptions) {
-        slotOptions.innerHTML =
-          '<button type="button" class="slot-btn empty" disabled>No hay horarios disponibles</button>';
-      }
-
-      await renderCalendar();
-
-      showToast(
-        `¡Gracias ${name}! Tu cita para ${service} quedó agendada.`
-      );
-    }
-  );
-}
-
-document.addEventListener(
-  'click',
-  async (event) => {
-    const cancelButton =
-      event.target.closest('.cancel-btn');
-
-    if (cancelButton) {
-      await cancelAppointment(
-        cancelButton.dataset.id
-      );
-
-      return;
-    }
-
-    const attendedButton =
-      event.target.closest('.attended-btn');
-
-    if (attendedButton) {
-      await markAppointmentAsHandled(
-        attendedButton.dataset.id
-      );
-
-      return;
-    }
-
-    const removeSlotButton =
-      event.target.closest('.remove-slot-btn');
-
-    if (removeSlotButton) {
-      await removeAvailability(
-        removeSlotButton.dataset.slotId
-      );
-
-      return;
-    }
-
-    const calendarDay =
-      event.target.closest('.calendar-day');
-
-    if (calendarDay && !calendarDay.disabled) {
-      await updateSelectedDate(
-        calendarDay.dataset.date
-      );
-
-      return;
-    }
-
-    const slotButton =
-      event.target.closest('.slot-btn');
-
-    if (
-      slotButton &&
-      !slotButton.disabled &&
-      !slotButton.classList.contains('empty')
-    ) {
-      state.selectedTime =
-        slotButton.dataset.time;
-
-      if (selectedTimeInput) {
-        selectedTimeInput.value =
-          state.selectedTime;
-      }
-
-      await renderSlotOptions(
-        state.selectedDate
-      );
+    if (uniqueDates.length > 0) {
+      const firstDate = uniqueDates[0];
+      const firstBtn = calendarRoot.querySelector(`[data-date="${firstDate}"]`);
+      if (firstBtn) firstBtn.click();
     }
   }
-);
 
-if (prevMonthBtn) {
-  prevMonthBtn.addEventListener(
-    'click',
-    async () => {
-      state.currentMonth = new Date(
-        state.currentMonth.getFullYear(),
-        state.currentMonth.getMonth() - 1,
-        1
-      );
-
-      await renderCalendar();
-    }
-  );
+  if (slotList && !calendarRoot) {
+    const selectedDate = dateSelect?.value || uniqueDates[0];
+    if (selectedDate) renderTimeSlotsForDate(selectedDate, slots);
+  }
 }
 
-if (nextMonthBtn) {
-  nextMonthBtn.addEventListener(
-    'click',
-    async () => {
-      state.currentMonth = new Date(
-        state.currentMonth.getFullYear(),
-        state.currentMonth.getMonth() + 1,
-        1
-      );
+function renderTimeSlotsForDate(date, slots) {
+  const slotList = document.getElementById("slotList");
+  const selectedSlotInput = document.getElementById("selectedSlot");
 
-      await renderCalendar();
-    }
-  );
-}
+  if (!slotList) return;
 
-if (exportAppointmentsBtn) {
-  exportAppointmentsBtn.addEventListener(
-    'click',
-    exportAppointments
-  );
-}
+  const availableSlots = slots.filter((slot) => slot.date === date && slot.is_available === true);
 
-if (ownerLoginForm) {
-  ownerLoginForm.addEventListener(
-    'submit',
-    (event) => {
-      event.preventDefault();
+  slotList.innerHTML = "";
 
-      const formData =
-        new FormData(ownerLoginForm);
+  if (!availableSlots.length) {
+    slotList.innerHTML = `<p class="empty-state">No hay horarios disponibles para esta fecha.</p>`;
+    if (selectedSlotInput) selectedSlotInput.value = "";
+    return;
+  }
 
-      const username =
-        formData.get('username')?.toString().trim() ||
-        '';
+  availableSlots.forEach((slot) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "slot-btn";
+    btn.textContent = slot.time;
+    btn.dataset.date = slot.date;
+    btn.dataset.time = slot.time;
+    btn.dataset.slotId = slot.id;
 
-      const password =
-        formData.get('password')?.toString() ||
-        '';
-
-      if (!username || !password) {
-        showToast(
-          'Ingresa usuario y contraseña.'
-        );
-
-        return;
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".slot-btn").forEach((el) => el.classList.remove("selected"));
+      btn.classList.add("selected");
+      if (selectedSlotInput) {
+        selectedSlotInput.value = `${slot.date} ${slot.time}`;
       }
+    });
 
-      const success =
-        unlockOwnerAccess(username, password);
-
-      if (success) {
-        ownerLoginForm.reset();
-      }
-    }
-  );
+    slotList.appendChild(btn);
+  });
 }
 
-if (logoutOwnerBtn) {
-  logoutOwnerBtn.addEventListener(
-    'click',
-    lockOwnerAccess
-  );
-}
+// =========================
+// AGENDAR CITA
+// =========================
+async function submitBooking(event) {
+  event.preventDefault();
 
+  const form = event.target;
+  const name = form.querySelector("#clientName")?.value?.trim();
+  const phone = form.querySelector("#clientPhone")?.value?.trim();
+  const email = form.querySelector("#clientEmail")?.value?.trim();
+  const service = form.querySelector("#serviceSelect")?.value;
+  const notes = form.querySelector("#clientNotes")?.value?.trim();
+  const selectedSlot = document.getElementById("selectedSlot")?.value;
 
-// =====================================
-// INICIO
-// =====================================
+  if (!name || !phone || !email || !service || !selectedSlot) {
+    showToast("Completa todos los campos y selecciona una fecha/hora", "error");
+    return;
+  }
 
-async function init() {
-  console.log('Conectando con Supabase...');
+  const [date, time] = selectedSlot.split(" ");
+  if (!date || !time) {
+    showToast("Selecciona una fecha y hora válidas", "error");
+    return;
+  }
 
-  const {
-    data,
-    error
-  } = await supabaseClient
-    .from('appointments')
-    .select('id')
-    .limit(1);
+  // Verificar que el horario siga disponible
+  const { data: slotData, error: slotError } = await supabase
+    .from("availability")
+    .select("*")
+    .eq("date", date)
+    .eq("time", time)
+    .single();
+
+  if (slotError || !slotData) {
+    showToast("Ese horario ya no está disponible", "error");
+    await loadAvailability();
+    return;
+  }
+
+  if (slotData.is_available !== true) {
+    showToast("Ese horario ya fue reservado", "error");
+    await loadAvailability();
+    return;
+  }
+
+  const payload = {
+    name,
+    phone,
+    email,
+    service,
+    date,
+    time,
+    notes: notes || "",
+    status: "pending",
+    created_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase.from("appointments").insert([payload]).select();
 
   if (error) {
-    console.error(
-      'Error conectando con Supabase:',
-      error
-    );
+    console.error("Error insertando agenda:", error);
+    showToast("No se pudo guardar la cita", "error");
+    return;
+  }
 
-    showToast(
-      'Error conectando con la base de datos.'
-    );
+  const { error: updateError } = await supabase
+    .from("availability")
+    .update({ is_available: false, booked_by: data?.[0]?.id || null })
+    .eq("id", slotData.id);
+
+  if (updateError) {
+    console.error("Error actualizando disponibilidad:", updateError);
+  }
+
+  form.reset();
+  const selectedSlotInput = document.getElementById("selectedSlot");
+  if (selectedSlotInput) selectedSlotInput.value = "";
+
+  showToast("Cita agendada correctamente");
+  await loadAvailability();
+  await loadAppointments();
+}
+
+// =========================
+// VER AGENDAS PENDIENTES
+// =========================
+async function loadAppointments() {
+  const container = document.getElementById("pendingAppointments");
+  if (!container) return;
+
+  const { data, error } = await supabase
+    .from("appointments")
+    .select("*")
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error loading appointments:", error);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    container.innerHTML = "<p class='empty-state'>No hay agendas pendientes.</p>";
+    return;
+  }
+
+  container.innerHTML = "";
+
+  data.forEach((appointment) => {
+    const card = document.createElement("div");
+    card.className = "appointment-card";
+
+    card.innerHTML = `
+      <div class="appointment-header">
+        <div>
+          <strong>${appointment.name}</strong>
+          <small>${appointment.service}</small>
+        </div>
+        <span class="badge pending">Pendiente</span>
+      </div>
+
+      <div class="appointment-body">
+        <p><strong>Tel:</strong> ${appointment.phone}</p>
+        <p><strong>Email:</strong> ${appointment.email}</p>
+        <p><strong>Fecha:</strong> ${appointment.date}</p>
+        <p><strong>Hora:</strong> ${appointment.time}</p>
+        <p><strong>Notas:</strong> ${appointment.notes || "Sin notas"}</p>
+      </div>
+
+      <div class="appointment-actions">
+        <button type="button" class="mark-done-btn" data-id="${appointment.id}">
+          Agenda atendida
+        </button>
+        <button type="button" class="cancel-btn" data-id="${appointment.id}">
+          Cancelar
+        </button>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+
+  bindAppointmentActions();
+}
+
+// =========================
+// VER AGENDAS REGISTRADAS
+// =========================
+async function loadRegisteredAppointments() {
+  const container = document.getElementById("registeredAppointments");
+  if (!container) return;
+
+  const { data, error } = await supabase
+    .from("appointments")
+    .select("*")
+    .in("status", ["done", "cancelled"])
+    .order("updated_at", { ascending: false });
+
+  if (error) {
+    console.error("Error loading registered appointments:", error);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    container.innerHTML = "<p class='empty-state'>No hay agendas registradas.</p>";
+    return;
+  }
+
+  container.innerHTML = "";
+
+  data.forEach((appointment) => {
+    const card = document.createElement("div");
+    card.className = "appointment-card registered";
+
+    const stateLabel = appointment.status === "done" ? "Atendida" : "Cancelada";
+
+    card.innerHTML = `
+      <div class="appointment-header">
+        <div>
+          <strong>${appointment.name}</strong>
+          <small>${appointment.service}</small>
+        </div>
+        <span class="badge ${appointment.status === "done" ? "done" : "cancelled"}">${stateLabel}</span>
+      </div>
+
+      <div class="appointment-body">
+        <p><strong>Tel:</strong> ${appointment.phone}</p>
+        <p><strong>Email:</strong> ${appointment.email}</p>
+        <p><strong>Fecha:</strong> ${appointment.date}</p>
+        <p><strong>Hora:</strong> ${appointment.time}</p>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+// =========================
+// ACCIONES DE AGENDA
+// =========================
+function bindAppointmentActions() {
+  document.querySelectorAll(".mark-done-btn").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const id = button.dataset.id;
+      if (!id) return;
+
+      const { error } = await supabase
+        .from("appointments")
+        .update({
+          status: "done",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+
+      if (error) {
+        console.error("Error al marcar como atendida:", error);
+        showToast("No se pudo marcar la cita", "error");
+        return;
+      }
+
+      showToast("Agenda marcada como atendida");
+      await loadAppointments();
+      await loadRegisteredAppointments();
+    });
+  });
+
+  document.querySelectorAll(".cancel-btn").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const id = button.dataset.id;
+      if (!id) return;
+
+      const { error } = await supabase
+        .from("appointments")
+        .update({
+          status: "cancelled",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+
+      if (error) {
+        console.error("Error al cancelar cita:", error);
+        showToast("No se pudo cancelar la cita", "error");
+        return;
+      }
+
+      // Liberar horario en disponibilidad
+      const { data: appointment } = await supabase
+        .from("appointments")
+        .select("date, time")
+        .eq("id", id)
+        .single();
+
+      if (appointment) {
+        await supabase
+          .from("availability")
+          .update({ is_available: true, booked_by: null })
+          .eq("date", appointment.date)
+          .eq("time", appointment.time);
+      }
+
+      showToast("Cita cancelada");
+      await loadAppointments();
+      await loadRegisteredAppointments();
+      await loadAvailability();
+    });
+  });
+}
+
+// =========================
+// LOGIN DEL ADMIN
+// =========================
+function setupOwnerLogin() {
+  const form = document.getElementById("adminLoginForm");
+  if (!form) return;
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const username = document.getElementById("adminUser")?.value?.trim();
+    const password = document.getElementById("adminPassword")?.value;
+
+    if (username === OWNER_USERNAME && password === OWNER_PASSWORD) {
+      setOwnerSession(true);
+      showOwnerPanel();
+      showToast("Sesión iniciada correctamente");
+      form.reset();
+      return;
+    }
+
+    showToast("Usuario o contraseña incorrectos", "error");
+  });
+}
+
+function showOwnerPanel() {
+  const panel = document.getElementById("ownerPanel");
+  const adminAccess = document.getElementById("adminAccess");
+  const loginBox = document.getElementById("loginBox");
+
+  if (!panel) return;
+
+  if (isOwnerLoggedIn()) {
+    panel.classList.remove("hidden");
+    if (adminAccess) adminAccess.classList.remove("hidden");
+    if (loginBox) loginBox.classList.add("hidden");
   } else {
-    console.log(
-      'Supabase conectado correctamente:',
-      data
-    );
-  }
-
-  setOwnerAccess(isOwnerUnlocked());
-
-  const availableSlots =
-    await getAvailableSlots();
-
-  if (availableSlots.length) {
-    state.selectedDate =
-      availableSlots[0].date;
-
-    state.selectedTime =
-      availableSlots[0].time;
-
-    if (selectedDateInput) {
-      selectedDateInput.value =
-        state.selectedDate;
-    }
-
-    if (selectedTimeInput) {
-      selectedTimeInput.value =
-        state.selectedTime;
-    }
-  }
-
-  await renderAppointments();
-  await renderRegisteredAppointments();
-  await renderAvailabilityList();
-  await renderCalendar();
-
-  if (state.selectedDate) {
-    await renderSlotOptions(
-      state.selectedDate
-    );
-  } else if (slotOptions) {
-    slotOptions.innerHTML =
-      '<button type="button" class="slot-btn empty" disabled>Selecciona un día</button>';
+    panel.classList.add("hidden");
+    if (adminAccess) adminAccess.classList.add("hidden");
+    if (loginBox) loginBox.classList.remove("hidden");
   }
 }
 
-init();
+async function logoutOwner() {
+  setOwnerSession(false);
+  showOwnerPanel();
+  showToast("Sesión cerrada");
+}
+
+function setupLogoutButton() {
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (!logoutBtn) return;
+
+  logoutBtn.addEventListener("click", logoutOwner);
+}
+
+// =========================
+// REDES SOCIALES
+// =========================
+async function loadSocialLinks() {
+  const container = document.getElementById("socialLinks");
+  if (!container) return;
+
+  const { data, error } = await supabase.from("social_links").select("*").order("id", { ascending: true });
+
+  if (error) {
+    console.error("Error loading social links:", error);
+    return;
+  }
+
+  if (!data || data.length === 0) return;
+
+  container.innerHTML = "";
+
+  data.forEach((link) => {
+    const a = document.createElement("a");
+    a.href = link.url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.className = "social-btn";
+    a.textContent = link.label;
+    container.appendChild(a);
+  });
+}
+
+// =========================
+// INICIALIZAR
+// =========================
+async function initSupabaseApp() {
+  setupOwnerLogin();
+  setupLogoutButton();
+  showOwnerPanel();
+
+  if (document.getElementById("bookingForm")) {
+    const bookingForm = document.getElementById("bookingForm");
+    bookingForm.addEventListener("submit", submitBooking);
+  }
+
+  if (isOwnerLoggedIn()) {
+    await loadAppointments();
+    await loadRegisteredAppointments();
+    await loadAvailability();
+  } else {
+    await loadAvailability();
+  }
+
+  await loadSocialLinks();
+}
+
+document.addEventListener("DOMContentLoaded", initSupabaseApp);
 
