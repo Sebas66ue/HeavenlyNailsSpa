@@ -3,7 +3,8 @@
 // =========================
 const supabaseUrl = "https://rgxybkmglfdxrgluzfwc.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJneHlia21nbGZkeHJnbHV6ZndjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMDc3MzYsImV4cCI6MjEwMzc4MzczNn0.HhocvsjUxVuNW78sVTJmfNDJmrBb_TsU6KvIAscDsJI";
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 const OWNER_USERNAME = "Heaven Ulabarri";
 const OWNER_PASSWORD = "micielito0";
@@ -11,7 +12,7 @@ const ADMIN_SESSION_KEY = "heaven_admin_session";
 const PASSWORD_VERSION = "v1";
 
 // =========================
-// HELPERS
+// UTILIDADES
 // =========================
 function showToast(message, type = "success") {
   const toast = document.getElementById("toast");
@@ -38,7 +39,7 @@ function formatDateForDisplay(dateStr) {
   return new Intl.DateTimeFormat("es-MX", {
     weekday: "short",
     day: "numeric",
-    month: "short"
+    month: "short",
   }).format(date);
 }
 
@@ -65,7 +66,7 @@ function setOwnerSession(loggedIn) {
     JSON.stringify({
       loggedIn,
       username: OWNER_USERNAME,
-      passwordVersion: PASSWORD_VERSION
+      passwordVersion: PASSWORD_VERSION,
     })
   );
 }
@@ -76,7 +77,7 @@ function setOwnerSession(loggedIn) {
 async function loadAvailability() {
   const today = getTodayISO();
 
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from("availability")
     .select("*")
     .gte("date", today)
@@ -211,7 +212,7 @@ async function submitBooking(event) {
     return;
   }
 
-  const { data: slotData, error: slotError } = await supabase
+  const { data: slotData, error: slotError } = await sb
     .from("availability")
     .select("*")
     .eq("date", date)
@@ -239,10 +240,10 @@ async function submitBooking(event) {
     time,
     notes: notes || "",
     status: "pending",
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
   };
 
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from("appointments")
     .insert([payload])
     .select();
@@ -253,11 +254,11 @@ async function submitBooking(event) {
     return;
   }
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await sb
     .from("availability")
     .update({
       is_available: false,
-      booked_by: data?.[0]?.id || null
+      booked_by: data?.[0]?.id || null,
     })
     .eq("id", slotData.id);
 
@@ -282,7 +283,7 @@ async function loadAppointments() {
   const container = document.getElementById("pendingAppointments");
   if (!container) return;
 
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from("appointments")
     .select("*")
     .eq("status", "pending")
@@ -344,7 +345,7 @@ async function loadRegisteredAppointments() {
   const container = document.getElementById("registeredAppointments");
   if (!container) return;
 
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from("appointments")
     .select("*")
     .in("status", ["done", "cancelled"])
@@ -398,11 +399,11 @@ function bindAppointmentActions() {
       const id = button.dataset.id;
       if (!id) return;
 
-      const { error } = await supabase
+      const { error } = await sb
         .from("appointments")
         .update({
           status: "done",
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq("id", id);
 
@@ -423,11 +424,11 @@ function bindAppointmentActions() {
       const id = button.dataset.id;
       if (!id) return;
 
-      const { error } = await supabase
+      const { error } = await sb
         .from("appointments")
         .update({
           status: "cancelled",
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq("id", id);
 
@@ -437,18 +438,18 @@ function bindAppointmentActions() {
         return;
       }
 
-      const { data: appointment } = await supabase
+      const { data: appointment } = await sb
         .from("appointments")
         .select("date, time")
         .eq("id", id)
         .single();
 
       if (appointment) {
-        await supabase
+        await sb
           .from("availability")
           .update({
             is_available: true,
-            booked_by: null
+            booked_by: null,
           })
           .eq("date", appointment.date)
           .eq("time", appointment.time);
@@ -525,7 +526,7 @@ async function loadSocialLinks() {
   const container = document.getElementById("socialLinks");
   if (!container) return;
 
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from("social_links")
     .select("*")
     .order("id", { ascending: true });
