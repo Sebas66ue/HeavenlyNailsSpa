@@ -637,16 +637,49 @@ async function submitBooking(event) {
 }
 
 async function cancelAppointment(appointmentId) {
-  const { error } = await sb
+  const { data, error } = await sb
     .from("appointments")
-    .update({ status: "cancelled", updated_at: new Date().toISOString() })
-    .eq("id", appointmentId);
+    .select("*")
+    .eq("id", appointmentId)
+    .single();
 
   if (error) {
-    console.error("Error cancelando cita:", error);
+    console.error("Error buscando cita:", error);
+    return;
+  }
+
+  const { error: updateError } = await sb
+    .from("appointments")
+    .update({
+      status: "cancelled",
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", appointmentId);
+
+  if (updateError) {
+    console.error("Error cancelando cita:", updateError);
     showToast("No se pudo cancelar la cita.", "error");
     return;
   }
+
+  const { error: slotError } = await sb
+    .from("availability")
+    .update({
+      is_available: true,
+      booked_by: null
+    })
+    .eq("date", data.date)
+    .eq("time", data.time);
+
+  if (slotError) {
+    console.error("Error liberando slot:", slotError);
+  }
+
+  showToast("Cita cancelada.");
+  await loadAppointments();
+  await loadRegisteredAppointments();
+  await loadAvailability();
+}
 
   showToast("Cita cancelada.");
   await loadAppointments();
