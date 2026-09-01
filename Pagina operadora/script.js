@@ -537,14 +537,14 @@ function bindAppointmentActions() {
 // LOGIN DEL ADMIN
 // =========================
 function setupOwnerLogin() {
-  const form = document.getElementById("adminLoginForm");
+  const form = document.getElementById("ownerLoginForm");
   if (!form) return;
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
 
-    const username = document.getElementById("adminUser")?.value?.trim();
-    const password = document.getElementById("adminPassword")?.value;
+    const username = document.getElementById("username")?.value?.trim();
+    const password = document.getElementById("password")?.value;
 
     if (username === OWNER_USERNAME && password === OWNER_PASSWORD) {
       setOwnerSession(true);
