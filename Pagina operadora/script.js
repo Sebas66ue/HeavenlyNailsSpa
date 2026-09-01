@@ -6,7 +6,7 @@ const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 const form = document.getElementById("bookingForm");
 const toast = document.getElementById("toast");
-const creatorEmail = "creador@nailsspa.com";
+const creatorEmail = "heavenulabarri@gmail.com";
 
 const appointmentsList = document.getElementById("appointmentsList");
 const appointmentsCount = document.getElementById("appointmentsCount");
