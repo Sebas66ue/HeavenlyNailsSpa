@@ -636,38 +636,89 @@ async function submitBooking(event) {
   showToast(`¡Gracias ${name}! Tu cita para ${service} quedó agendada.`);
 }
 
-async function cancelAppointment(appointmentId) {
-  const { error } = await sb
-    .from("appointments")
-    .update({ status: "cancelled", updated_at: new Date().toISOString() })
-    .eq("id", appointmentId);
-
-  if (error) {
-    console.error("Error cancelando cita:", error);
-    showToast("No se pudo cancelar la cita.", "error");
-    return;
+function removeAppointmentFromDOM(appointmentId) {
+  const cards = document.querySelectorAll('.appointment-card');
+  cards.forEach((card) => {
+    const buttons = card.querySelectorAll('[data-id]');
+    buttons.forEach((btn) => {
+      if (btn.dataset.id === appointmentId) {
+        card.remove();
+      }
+    });
+  });
+  
+  state.pendingAppointments = state.pendingAppointments.filter((apt) => apt.id !== appointmentId);
+  
+  if (appointmentsCount) {
+    appointmentsCount.textContent = `${state.pendingAppointments.length} cita${state.pendingAppointments.length === 1 ? '' : 's'}`;
   }
+  
+  if (state.pendingAppointments.length === 0 && appointmentsList) {
+    appointmentsList.innerHTML = '<p class="empty-state">No hay citas agendadas todavía.</p>';
+  }
+}
 
+function moveAppointmentToHandled(appointmentId) {
+  const appointment = state.pendingAppointments.find((apt) => apt.id === appointmentId);
+  
+  if (!appointment) return;
+  
+  const cards = document.querySelectorAll('.appointment-card');
+  cards.forEach((card) => {
+    const buttons = card.querySelectorAll('[data-id]');
+    buttons.forEach((btn) => {
+      if (btn.dataset.id === appointmentId) {
+        card.remove();
+      }
+    });
+  });
+  
+  state.pendingAppointments = state.pendingAppointments.filter((apt) => apt.id !== appointmentId);
+  state.handledAppointments.push(appointment);
+  
+  if (appointmentsCount) {
+    appointmentsCount.textContent = `${state.pendingAppointments.length} cita${state.pendingAppointments.length === 1 ? '' : 's'}`;
+  }
+  
+  if (registeredAppointmentsCount) {
+    registeredAppointmentsCount.textContent = `${state.handledAppointments.length} agenda${state.handledAppointments.length === 1 ? '' : 's'}`;
+  }
+  
+  if (state.pendingAppointments.length === 0 && appointmentsList) {
+    appointmentsList.innerHTML = '<p class="empty-state">No hay citas agendadas todavía.</p>';
+  }
+  
+  if (registeredAppointmentsList) {
+    renderRegisteredAppointments();
+  }
+}
+
+async function cancelAppointment(appointmentId) {
+  removeAppointmentFromDOM(appointmentId);
   showToast("Cita cancelada.");
-  await loadAppointments();
-  await loadRegisteredAppointments();
+  
+  try {
+    await sb
+      .from("appointments")
+      .update({ status: "cancelled", updated_at: new Date().toISOString() })
+      .eq("id", appointmentId);
+  } catch (error) {
+    console.error("Error en Supabase:", error);
+  }
 }
 
 async function markAppointmentAsHandled(appointmentId) {
-  const { error } = await sb
-    .from("appointments")
-    .update({ status: "handled", updated_at: new Date().toISOString() })
-    .eq("id", appointmentId);
-
-  if (error) {
-    console.error("Error marcando como atendida:", error);
-    showToast("No se pudo registrar la cita.", "error");
-    return;
-  }
-
+  moveAppointmentToHandled(appointmentId);
   showToast("La agenda fue marcada como atendida.");
-  await loadAppointments();
-  await loadRegisteredAppointments();
+  
+  try {
+    await sb
+      .from("appointments")
+      .update({ status: "handled", updated_at: new Date().toISOString() })
+      .eq("id", appointmentId);
+  } catch (error) {
+    console.error("Error en Supabase:", error);
+  }
 }
 
 async function exportAppointmentsByEmail() {
