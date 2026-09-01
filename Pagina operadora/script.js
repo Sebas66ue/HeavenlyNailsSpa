@@ -7,42 +7,68 @@ const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 const OWNER_USERNAME = "Heaven Ulabarri";
-const OWNER_PASSWORD = "micielito1";
+const OWNER_PASSWORD = "micielito0";
 const ADMIN_SESSION_KEY = "heaven_admin_session";
 const PASSWORD_VERSION = "v1";
 
-// =========================
-// LOGIN DEL ADMIN (CORREGIDO)
-// =========================
-function getOwnerLoginElements() {
-  return {
-    form: document.querySelector("#adminLoginForm, #ownerLoginForm, #loginForm, form[data-login]"),
-    user: document.querySelector("#adminUser, #ownerUser, #username, input[name='usuario']"),
-    pass: document.querySelector("#adminPassword, #ownerPassword, #password, input[name='password']"),
-    panel: document.querySelector("#ownerPanel, #adminPanel, .owner-panel"),
-    adminAccess: document.querySelector("#adminAccess, .admin-access"),
-    loginBox: document.querySelector("#loginBox, .login-box"),
-    logoutBtn: document.querySelector("#logoutBtn, .logout-btn, button[data-logout]")
-  };
+function isOwnerLoggedIn() {
+  const stored = localStorage.getItem(ADMIN_SESSION_KEY);
+  if (!stored) return false;
+
+  try {
+    const session = JSON.parse(stored);
+    return (
+      session &&
+      session.loggedIn === true &&
+      session.username === OWNER_USERNAME &&
+      session.passwordVersion === PASSWORD_VERSION
+    );
+  } catch {
+    return false;
+  }
+}
+
+function setOwnerSession(loggedIn) {
+  localStorage.setItem(
+    ADMIN_SESSION_KEY,
+    JSON.stringify({
+      loggedIn,
+      username: OWNER_USERNAME,
+      passwordVersion: PASSWORD_VERSION
+    })
+  );
+}
+
+function showOwnerState() {
+  const form = document.getElementById("ownerLoginForm");
+  const sessionControls = document.getElementById("ownerSessionControls");
+
+  if (!form || !sessionControls) return;
+
+  if (isOwnerLoggedIn()) {
+    form.classList.add("hidden");
+    sessionControls.classList.remove("hidden");
+  } else {
+    form.classList.remove("hidden");
+    sessionControls.classList.add("hidden");
+  }
 }
 
 function setupOwnerLogin() {
-  const { form, user, pass } = getOwnerLoginElements();
+  const form = document.getElementById("ownerLoginForm");
 
-  if (!form || !user || !pass) {
-    console.warn("No se encontró el formulario de login del admin.");
-    return;
-  }
+  if (!form) return;
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
 
-    const username = user.value.trim();
-    const password = pass.value;
+    const formData = new FormData(form);
+    const username = formData.get("username")?.toString().trim();
+    const password = formData.get("password")?.toString();
 
     if (username === OWNER_USERNAME && password === OWNER_PASSWORD) {
       setOwnerSession(true);
-      showOwnerPanel();
+      showOwnerState();
       showToast("Sesión iniciada correctamente");
       form.reset();
       return;
@@ -52,38 +78,23 @@ function setupOwnerLogin() {
   });
 }
 
-function showOwnerPanel() {
-  const { panel, adminAccess, loginBox } = getOwnerLoginElements();
-
-  if (!panel) {
-    console.warn("No se encontró el panel del admin.");
-    return;
-  }
-
-  if (isOwnerLoggedIn()) {
-    panel.classList.remove("hidden");
-    if (adminAccess) adminAccess.classList.remove("hidden");
-    if (loginBox) loginBox.classList.add("hidden");
-  } else {
-    panel.classList.add("hidden");
-    if (adminAccess) adminAccess.classList.add("hidden");
-    if (loginBox) loginBox.classList.remove("hidden");
-  }
-}
-
-function logoutOwner() {
-  setOwnerSession(false);
-  showOwnerPanel();
-  showToast("Sesión cerrada");
-}
-
-function setupLogoutButton() {
-  const { logoutBtn } = getOwnerLoginElements();
+function setupOwnerLogout() {
+  const logoutBtn = document.getElementById("logoutOwnerBtn");
 
   if (!logoutBtn) return;
 
-  logoutBtn.addEventListener("click", logoutOwner);
+  logoutBtn.addEventListener("click", () => {
+    setOwnerSession(false);
+    showOwnerState();
+    showToast("Sesión cerrada");
+  });
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  setupOwnerLogin();
+  setupOwnerLogout();
+  showOwnerState();
+});
 // =========================
 // CARGAR DISPONIBILIDAD
 // =========================
