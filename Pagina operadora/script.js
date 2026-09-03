@@ -184,7 +184,7 @@ function buildAppointmentMessage(appointment, action = "Nueva cita agendada") {
 }
 
 function sendWhatsApp(message) {
-  const phoneNumber = "573001234567"; // Cambia este número
+  const phoneNumber = "573182292164"; // Cambia este número
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
   window.location.href = whatsappUrl;
 }
