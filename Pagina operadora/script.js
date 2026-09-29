@@ -216,7 +216,7 @@ async function loadAvailability() {
 
       const dateKey = toDateKey(date);
 
-      ["10:00", "12:00", "15:00", "17:30"].forEach((time) => {
+      ["06:00", "08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00"].forEach((time) => {
         seedSlots.push({
           date: dateKey,
           time,
